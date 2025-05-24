@@ -1,15 +1,14 @@
 import torch.nn as nn
-
-class LandmarkClassifier(nn.Module):
-    def __init__(self, input_dim, hidden_dim, output_dim):
-        super(LandmarkClassifier, self).__init__()
-        self.model = nn.Sequential(
-            nn.Linear(input_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, output_dim)
-        )
+import torch.nn.functional as F
+# Model definition
+class FaceClassifier(nn.Module):
+    def __init__(self, input_dim, num_classes):
+        super(FaceClassifier, self).__init__()
+        self.fc1 = nn.Linear(input_dim, 64)
+        self.fc2 = nn.Linear(64, 32)
+        self.output = nn.Linear(32, num_classes)
 
     def forward(self, x):
-        return self.model(x)
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        return self.output(x)  # logits (no softmax)

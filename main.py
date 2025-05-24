@@ -1,31 +1,25 @@
 import torch
-from data_utils import load_and_preprocess_data, create_dataloaders
-from model import LandmarkClassifier
+from data_utils import load_and_preprocess_data
 from train import train_model
-from test import evaluate_model
-from utils import save_artifacts
+from test import test_model
+from model import FaceClassifier
+
 
 def main():
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    csv_path = "Dataset/Dataset_dist.csv"
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    print(">> Caricamento e preprocessing dati...")
-    X_train, X_test, y_train, y_test, scaler, label_encoder = load_and_preprocess_data(csv_path)
-    train_loader = create_dataloaders(X_train, y_train)
+    train_loader, test_loader, num_classes, le = load_and_preprocess_data("Dataset/Dataset_dist.csv")
 
-    input_dim = X_train.shape[1]
-    hidden_dim = 64
-    output_dim = len(label_encoder.classes_)
+    for X_batch, _ in train_loader:
+        input_dim = X_batch.shape[1]
+        break
 
-    print(">> Inizializzazione e training del modello...")
-    model = LandmarkClassifier(input_dim, hidden_dim, output_dim)
-    train_model(model, train_loader, device)
+    model = FaceClassifier(input_dim=input_dim, num_classes=num_classes)
 
-    print(">> Valutazione del modello...")
-    evaluate_model(model, X_test, y_test, label_encoder, device, threshold=0.5)
+    train_model(model, train_loader, device=device)
 
-    print(">> Salvataggio del modello e oggetti...")
-    save_artifacts(model, scaler, label_encoder)
+    test_model(model, test_loader, device=device, le=le)
+
 
 if __name__ == "__main__":
     main()
