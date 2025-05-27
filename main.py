@@ -16,7 +16,7 @@ def main():
 
     model = FaceClassifier(input_dim=input_dim, num_classes=num_classes)
 
-    train_model(model, train_loader, val_loader, device=device, epochs=200)  # Passa anche val_loader
+    train_model(model, train_loader, val_loader,num_classes, epochs=200)  # Passa anche val_loader
 
     test_model(model, test_loader, device=device, le=le)
 
