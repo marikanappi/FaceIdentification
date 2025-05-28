@@ -2,7 +2,7 @@ import torch
 from data_utils import load_and_preprocess_data, analyze_class_distribution
 from train import train_model
 from test import test_model
-from model import FaceClassifier, ResNetFaceClassifier, AttentionFaceClassifier
+from model import FaceClassifier
 import pandas as pd
 
 def main():
@@ -25,7 +25,7 @@ def main():
         'learning_rate': 0.001,
         'weight_decay': 1e-4,
         'batch_size': 64,
-        'epochs': 200
+        'epochs': 300
     }
 
     print(f"\n{'='*20} AVVIO {config['name'].upper()} {'='*20}")

@@ -86,21 +86,6 @@ def test_model(model, test_loader, device='cpu', le=None, show_confusion_matrix=
 
     return accuracy
 
-def plot_confusion_matrix(y_true, y_pred, class_names, figsize=(12, 10)):
-    """Plotta la matrice di confusione"""
-    cm = confusion_matrix(y_true, y_pred)
-    
-    plt.figure(figsize=figsize)
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
-                xticklabels=class_names, yticklabels=class_names)
-    plt.title('Matrice di Confusione')
-    plt.ylabel('Classe Reale')
-    plt.xlabel('Classe Predetta')
-    plt.xticks(rotation=45)
-    plt.yticks(rotation=0)
-    plt.tight_layout()
-    plt.show()
-
 def analyze_common_errors(y_true, y_pred, le=None, top_k=10):
     """Analizza gli errori più comuni"""
     print(f"\n❌ Top {top_k} errori più comuni:")
