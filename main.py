@@ -25,7 +25,7 @@ def main():
         'learning_rate': 0.001,
         'weight_decay': 1e-4,
         'batch_size': 64,
-        'epochs': 300
+        'epochs': 200
     }
 
     print(f"\n{'='*20} AVVIO {config['name'].upper()} {'='*20}")
