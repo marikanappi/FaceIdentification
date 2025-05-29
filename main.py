@@ -17,7 +17,7 @@ def main():
     config = {
         'name': 'Baseline_Improved_NoVal',
         'model_class': FaceClassifier,
-        'model_params': {'dropout_rate': 0.5},
+        'model_params': {},  # <-- rimosso dropout_rate
         'balance_method': 'weighted_sampling',
         'loss_type': 'weighted_ce',
         'learning_rate': 0.001,
@@ -25,6 +25,7 @@ def main():
         'batch_size': 64,
         'epochs': 200
     }
+
 
     print(f"\n{'='*20} AVVIO {config['name'].upper()} {'='*20}")
 
