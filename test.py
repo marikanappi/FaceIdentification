@@ -5,19 +5,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 def test_model(model, test_loader, device='cpu', le=None, show_confusion_matrix=True):
-    """
-    Testa il modello e restituisce metriche dettagliate
-    
-    Args:
-        model: modello da testare
-        test_loader: DataLoader del test set
-        device: dispositivo di calcolo
-        le: LabelEncoder per convertire le predizioni
-        show_confusion_matrix: se mostrare la matrice di confusione
-    
-    Returns:
-        accuracy: accuracy del test
-    """
     model.to(device)
     model.eval()
     y_true, y_pred, y_probs = [], [], []
@@ -73,10 +60,6 @@ def test_model(model, test_loader, device='cpu', le=None, show_confusion_matrix=
             
             cls_name = le.inverse_transform([cls])[0]
             print(f"{cls_name:<10} {cls_accuracy:<10.1f} {cls_support:<10} {cls_f1:<10.1f}")
-
-    # Matrice di confusione
-    if show_confusion_matrix and le and len(le.classes_) <= 20:  # Solo se non ci sono troppe classi
-        plot_confusion_matrix(y_true, y_pred, le.classes_)
 
     # Analisi degli errori più comuni
     analyze_common_errors(y_true, y_pred, le if le else None, top_k=10)

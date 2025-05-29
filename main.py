@@ -9,15 +9,13 @@ def main():
     # Configura il dispositivo
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(f"Usando dispositivo: {device}")
-
-    # Analizza distribuzione delle classi
     print("=" * 60)
     analyze_class_distribution("Dataset/Dataset_dist.csv")
     print("=" * 60)
 
     # Configurazione unica
     config = {
-        'name': 'Baseline_Improved',
+        'name': 'Baseline_Improved_NoVal',
         'model_class': FaceClassifier,
         'model_params': {'dropout_rate': 0.5},
         'balance_method': 'weighted_sampling',
@@ -30,8 +28,7 @@ def main():
 
     print(f"\n{'='*20} AVVIO {config['name'].upper()} {'='*20}")
 
-    # Carica e preprocessa i dati
-    train_loader, val_loader, test_loader, num_classes, le, class_weights = load_and_preprocess_data(
+    train_loader, test_loader, num_classes, le, class_weights = load_and_preprocess_data(
         "Dataset/Dataset_dist.csv",
         balance_method=config['balance_method'],
         batch_size=config['batch_size']
@@ -49,14 +46,10 @@ def main():
         **config['model_params']
     )
 
-    print(f"Modello creato: {config['model_class'].__name__}")
-    print(f"Parametri modello: {sum(p.numel() for p in model.parameters()):,}")
-
-    # Addestra il modello
+    # Addestra il modello (senza validazione)
     trained_model = train_model(
         model=model,
         train_loader=train_loader,
-        val_loader=val_loader,
         num_classes=num_classes,
         class_weights=class_weights if config['loss_type'] == 'weighted_ce' else None,
         epochs=config['epochs'],
