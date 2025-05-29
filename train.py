@@ -64,7 +64,7 @@ class LabelSmoothingLoss(nn.Module):
         true_dist.scatter_(1, target.data.unsqueeze(1), self.confidence)
         return torch.mean(torch.sum(-true_dist * pred, dim=-1))
 
-def train_model_no_val(model, train_loader, num_classes, class_weights, 
+def train_model(model, train_loader, num_classes, class_weights, 
                        epochs, learning_rate, weight_decay, 
                        loss_type='weighted_ce', device='cpu'):
     """

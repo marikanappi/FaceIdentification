@@ -49,7 +49,7 @@ class ReductionA(nn.Module):
         b0 = self.branch0(x)
         b1 = self.branch1(x)
         b2 = self.branch2(x)
-        return b0 + b1 + b2  # Simulazione concatenazione e conv finale
+        return b0 + b1 + b2  
 
 class ResidualBlock17(nn.Module):
     def __init__(self, input_dim, scale=1.0):
