@@ -1,69 +1,75 @@
 import torch
-from data_utils import load_and_preprocess_data, analyze_class_distribution
-from train import train_model
-from test import test_model
+from torch import nn, optim
+from torch.utils.data import DataLoader
+import matplotlib.pyplot as plt
+from data_utils import load_data
 from model import FaceClassifier
-import pandas as pd
+from train import train
+from test import evaluate
 
 def main():
-    # Configura il dispositivo
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    print(f"Usando dispositivo: {device}")
-    print("=" * 60)
-    analyze_class_distribution("Dataset/Dataset_dist.csv")
-    print("=" * 60)
+    # Config
+    csv_path = 'Dataset2/Dataset_facial_features_standard.csv'
+    batch_size = 32
+    lr = 1e-3
+    num_epochs = 100
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    # Configurazione unica
-    config = {
-        'name': 'Baseline_Improved_NoVal',
-        'model_class': FaceClassifier,
-        'model_params': {'dropout_rate': 0.5},
-        'balance_method': 'weighted_sampling',
-        'loss_type': 'weighted_ce',
-        'learning_rate': 0.001,
-        'weight_decay': 1e-4,
-        'batch_size': 64,
-        'epochs': 200
-    }
+    # Load data
+    train_dataset, test_dataset, label_encoder = load_data(csv_path)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-    print(f"\n{'='*20} AVVIO {config['name'].upper()} {'='*20}")
+    # Input/output sizes
+    input_dim = train_dataset[0][0].shape[0]
+    num_classes = len(label_encoder.classes_)
 
-    train_loader, test_loader, num_classes, le, class_weights = load_and_preprocess_data(
-        "Dataset/Dataset_dist.csv",
-        balance_method=config['balance_method'],
-        batch_size=config['batch_size']
-    )
+    # Model, loss, optimizer
+    model = FaceClassifier(input_dim, num_classes).to(device)
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters(), lr=lr)
 
-    # Ottieni input_dim
-    for X_batch, _ in train_loader:
-        input_dim = X_batch.shape[1]
-        break
+    # Metrics to track
+    train_losses, train_accuracies = [], []
+    test_accuracies = []
 
-    # Crea il modello
-    model = config['model_class'](
-        input_dim=input_dim,
-        num_classes=num_classes,
-        **config['model_params']
-    )
+    for epoch in range(num_epochs):
+        train_loss, train_acc = train(model, train_loader, optimizer, criterion, device)
+        test_loss, test_acc = evaluate(model, test_loader, criterion, device)
 
-    # Addestra il modello (senza validazione)
-    trained_model = train_model(
-        model=model,
-        train_loader=train_loader,
-        num_classes=num_classes,
-        class_weights=class_weights if config['loss_type'] == 'weighted_ce' else None,
-        epochs=config['epochs'],
-        learning_rate=config['learning_rate'],
-        weight_decay=config['weight_decay'],
-        loss_type=config['loss_type'],
-        device=device
-    )
+        train_losses.append(train_loss)
+        train_accuracies.append(train_acc)
+        test_accuracies.append(test_acc)
 
-    # Testa il modello
-    print(f"\n{'-'*20} RISULTATI TEST {config['name'].upper()} {'-'*20}")
-    test_accuracy = test_model(trained_model, test_loader, device=device, le=le)
+        print(f"Epoch [{epoch+1}/{num_epochs}] Train Loss: {train_loss:.4f} | Train Acc: {train_acc*100:.2f}% | Test Acc: {test_acc*100:.2f}%")
 
-    print(f"Accuracy: {test_accuracy:.2f}%")
+    # Final test accuracy
+    final_test_acc = test_accuracies[-1]
+    print(f"Final Test Accuracy: {final_test_acc * 100:.2f}%")
+
+    # Plot
+    plt.figure(figsize=(10, 4))
+    
+    # Loss
+    plt.subplot(1, 2, 1)
+    plt.plot(train_losses, label='Train Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('Training Loss')
+    plt.legend()
+
+    # Accuracy
+    plt.subplot(1, 2, 2)
+    plt.plot(train_accuracies, label='Train Acc')
+    plt.plot(test_accuracies, label='Test Acc')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy (%)')
+    plt.title('Accuracy')
+    plt.legend()
+
+    plt.tight_layout()
+    plt.savefig("training_curves.png")
+    print("📊 Training curves saved to training_curves.png")
 
 if __name__ == "__main__":
     main()
