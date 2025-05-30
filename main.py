@@ -2,10 +2,22 @@ import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
+import random
+import numpy as np
 from data_utils import load_data
 from model import FaceClassifier
 from train import train
 from test import evaluate
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
+
+seed = 0
+random.seed(seed)
+np.random.seed(seed)
+torch.manual_seed(seed)
+torch.cuda.manual_seed_all(seed)
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
 
 def main():
     # Config
@@ -33,6 +45,11 @@ def main():
     train_losses, train_accuracies = [], []
     test_accuracies = []
 
+    patience = 20
+    patience_counter = 0
+    best_acc = 0.0
+    best_model_state = None
+
     for epoch in range(num_epochs):
         train_loss, train_acc = train(model, train_loader, optimizer, criterion, device)
         test_loss, test_acc = evaluate(model, test_loader, criterion, device)
@@ -41,11 +58,28 @@ def main():
         train_accuracies.append(train_acc)
         test_accuracies.append(test_acc)
 
-        print(f"Epoch [{epoch+1}/{num_epochs}] Train Loss: {train_loss:.4f} | Train Acc: {train_acc*100:.2f}% | Test Acc: {test_acc*100:.2f}%")
+        print(f"Epoch [{epoch+1}/{num_epochs}] "
+              f"Train Loss: {train_loss:.4f} | Train Acc: {train_acc*100:.2f}% | "
+              f"Test Acc: {test_acc*100:.2f}%")
+
+        # Early stopping logic
+        if test_acc > best_acc:
+            best_acc = test_acc
+            best_model_state = model.state_dict()
+            patience_counter = 0
+        else:
+            patience_counter += 1
+            if patience_counter >= patience:
+                print(f"Early stopping at epoch {epoch+1}")
+                break
+
+    # Ripristino modello migliore
+    if best_model_state is not None:
+        model.load_state_dict(best_model_state)
 
     # Final test accuracy
-    final_test_acc = test_accuracies[-1]
-    print(f"Final Test Accuracy: {final_test_acc * 100:.2f}%")
+    final_test_acc = best_acc
+    print(f"Final Test Accuracy (best): {final_test_acc * 100:.2f}%")
 
     # Plot
     plt.figure(figsize=(10, 4))

@@ -1,5 +1,4 @@
 import torch
-import torch.nn as nn
 from tqdm import tqdm
 
 def train(model, dataloader, optimizer, criterion, device):
@@ -8,7 +7,7 @@ def train(model, dataloader, optimizer, criterion, device):
     correct = 0
     total = 0
 
-    for X, y in tqdm(dataloader):
+    for X, y in tqdm(dataloader, leave=False):
         X, y = X.to(device), y.to(device)
         optimizer.zero_grad()
         outputs = model(X)

@@ -11,7 +11,6 @@ def evaluate(model, dataloader, criterion, device):
             X, y = X.to(device), y.to(device)
             outputs = model(X)
             loss = criterion(outputs, y)
-
             total_loss += loss.item()
             _, preds = torch.max(outputs, 1)
             correct += (preds == y).sum().item()
