@@ -9,6 +9,7 @@ def train(model, dataloader, optimizer, criterion, device):
 
     for X, y in tqdm(dataloader, leave=False):
         X, y = X.to(device), y.to(device)
+        
         optimizer.zero_grad()
         outputs = model(X)
         loss = criterion(outputs, y)

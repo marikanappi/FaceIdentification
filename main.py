@@ -19,6 +19,28 @@ torch.cuda.manual_seed_all(seed)
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 
+def predict_with_unknown(model, X, device, threshold=0.5, label_encoder=None):
+    model.eval()
+    X = X.to(device)
+
+    with torch.no_grad():
+        outputs = model(X)
+        probs = torch.softmax(outputs, dim=1)
+        max_probs, preds = torch.max(probs, dim=1)
+
+        results = []
+        for prob, pred in zip(max_probs, preds):
+            if prob.item() < threshold:
+                results.append('unknown')
+            else:
+                if label_encoder is not None:
+                    results.append(label_encoder.inverse_transform([pred.item()])[0])
+                else:
+                    results.append(str(pred.item()))
+
+    return results
+
+
 def main():
     # Config
     csv_path = 'Dataset2/Dataset_facial_features_standard.csv'
@@ -45,7 +67,7 @@ def main():
     train_losses, train_accuracies = [], []
     test_accuracies = []
 
-    patience = 20
+    patience = 15
     patience_counter = 0
     best_acc = 0.0
     best_model_state = None
@@ -81,6 +103,22 @@ def main():
     final_test_acc = best_acc
     print(f"Final Test Accuracy (best): {final_test_acc * 100:.2f}%")
 
+    # Test predizioni con unknown su un batch
+    test_batch = next(iter(test_loader))
+    X_batch, y_batch = test_batch
+    y_batch = y_batch.cpu().numpy()  # True labels come numpy array
+
+    # Predizioni con unknown
+    threshold = 0.6
+    preds_with_unknown = predict_with_unknown(model, X_batch, device, threshold=threshold, label_encoder=label_encoder)
+
+    # Etichette vere (stringhe)
+    true_labels = label_encoder.inverse_transform(y_batch)
+
+    print("\nEsempio predizioni (con unknown):")
+    for true_label, pred in zip(true_labels, preds_with_unknown):
+        print(f"Vero: {true_label} | Predetto: {pred}")
+
     # Plot
     plt.figure(figsize=(10, 4))
     
@@ -103,7 +141,6 @@ def main():
 
     plt.tight_layout()
     plt.savefig("training_curves.png")
-    print("📊 Training curves saved to training_curves.png")
 
 if __name__ == "__main__":
     main()

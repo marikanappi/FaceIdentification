@@ -1,6 +1,6 @@
 import torch
 
-def evaluate(model, dataloader, criterion, device):
+def evaluate(model, dataloader, criterion, device, threshold=0.5):
     model.eval()
     total_loss = 0
     correct = 0
@@ -12,7 +12,15 @@ def evaluate(model, dataloader, criterion, device):
             outputs = model(X)
             loss = criterion(outputs, y)
             total_loss += loss.item()
-            _, preds = torch.max(outputs, 1)
+
+            # Calcolo probabilità
+            probs = torch.softmax(outputs, dim=1)
+            max_probs, preds = torch.max(probs, dim=1)
+
+            # Applico soglia
+            unknown_mask = max_probs < threshold
+            preds[unknown_mask] = -1  # Etichetta speciale per "unknown"
+
             correct += (preds == y).sum().item()
             total += y.size(0)
 
