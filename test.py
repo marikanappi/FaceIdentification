@@ -5,7 +5,28 @@ from torch import nn
 from data_utils import load_data
 from model import FaceClassifier
 
-def evaluate(model, dataloader, criterion, device):
+def predict_with_unknown(model, X, device, threshold=0.5, label_encoder=None):
+    model.eval()
+    X = X.to(device)
+
+    with torch.no_grad():
+        outputs = model(X)
+        probs = torch.softmax(outputs, dim=1)
+        max_probs, preds = torch.max(probs, dim=1)
+
+        results = []
+        for prob, pred in zip(max_probs, preds):
+            if prob.item() < threshold:
+                results.append('unknown')
+            else:
+                if label_encoder is not None:
+                    results.append(label_encoder.inverse_transform([pred.item()])[0])
+                else:
+                    results.append(str(pred.item()))
+
+    return results
+
+def evaluate(model, dataloader, criterion, device, threshold=0.5):
     model.eval()
     total_loss = 0
     correct = 0
@@ -17,7 +38,15 @@ def evaluate(model, dataloader, criterion, device):
             outputs = model(X)
             loss = criterion(outputs, y)
             total_loss += loss.item()
-            _, preds = torch.max(outputs, 1)
+
+            # Calcolo probabilità
+            probs = torch.softmax(outputs, dim=1)
+            max_probs, preds = torch.max(probs, dim=1)
+
+            # Applico soglia
+            unknown_mask = max_probs < threshold
+            preds[unknown_mask] = -1  # Etichetta speciale per "unknown"
+
             correct += (preds == y).sum().item()
             total += y.size(0)
 
@@ -46,3 +75,19 @@ def run_test():
 
     test_loss, test_acc = evaluate(model, test_loader, criterion, device)
     print(f"🧪 Test Loss: {test_loss:.4f} | Test Accuracy: {test_acc*100:.2f}%")
+
+    # Test predizioni con unknown su un batch
+    test_batch = next(iter(test_loader))
+    X_batch, y_batch = test_batch
+    y_batch = y_batch.cpu().numpy()
+
+    # Predizioni con unknown
+    threshold = 0.6
+    preds_with_unknown = predict_with_unknown(model, X_batch, device, threshold=threshold, label_encoder=label_encoder)
+
+    # Etichette vere (stringhe)
+    true_labels = label_encoder.inverse_transform(y_batch)
+
+    print("\nEsempio predizioni (con unknown):")
+    for true_label, pred in zip(true_labels, preds_with_unknown):
+        print(f"Vero: {true_label} | Predetto: {pred}")
