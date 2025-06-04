@@ -19,8 +19,12 @@ def volume_tetra(a, b, c, d):
 
 def landmarks_dist(png, raw, depth_shape=(480, 640), visualize=False):
     # === Caricamento immagini ===
-    image = cv2.imread(png)
-    depth_map = np.fromfile(raw, dtype=np.uint16).reshape(depth_shape)
+    if png is str:
+        image = cv2.imread(png)
+        depth_map = np.fromfile(raw, dtype=np.uint16).reshape(depth_shape)
+    else:
+        image = cv2.imdecode(np.frombuffer(png, np.uint8), cv2.IMREAD_COLOR)
+        depth_map = np.frombuffer(raw, dtype=np.uint16).reshape(depth_shape)
 
     # === Face Alignment ===
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
