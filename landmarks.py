@@ -117,7 +117,6 @@ def landmarks_dist(png, raw, depth_shape=(480, 640), visualize=False):
     volume_quads = [
         ("ensx", "prn", "alsx", "alsdx"),
         ("ensx", "exsx", "ensdx", "prn"),
-        ("cheilion_sx", "cheilion_dx", "ls"),
         ("ensx", "ensdx", "se", "prn"),
         ("exsx", "ensdx", "alsx", "alsdx")
     ]
