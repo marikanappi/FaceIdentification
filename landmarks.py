@@ -22,6 +22,11 @@ def landmarks_dist(png, raw, identity, expression, depth_shape=(480, 640), visua
     image = cv2.imread(png)
     depth_map = np.fromfile(raw, dtype=np.uint16).reshape(depth_shape)
 
+     # === Verifica e allineamento depth map ===
+    if image.shape[0] != depth_map.shape[0] or image.shape[1] != depth_map.shape[1]:
+        # Ridimensiona la depth map per corrispondere alle dimensioni dell'immagine
+        depth_map = cv2.resize(depth_map, (image.shape[1], image.shape[0]))
+
     # === Face Alignment ===
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     fa = face_alignment.FaceAlignment('2D', device=device)
@@ -160,6 +165,3 @@ def landmarks_dist(png, raw, identity, expression, depth_shape=(480, 640), visua
     feature_vector = [0 if v is None else v for v in feature_vector]
 
     return feature_vector
-
-'''feature_vector = landmarks_dist("ciccia1_Color.png", "ciccia1_Depth.raw", "ciccia1", "neutral")
-print("Feature Vector:", feature_vector)'''
