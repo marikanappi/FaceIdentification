@@ -17,14 +17,10 @@ def volume_tetra(a, b, c, d):
                       np.cross(np.array(b) - np.array(d), 
                                np.array(c) - np.array(d)))) / 6
 
-def landmarks_dist(png, raw, depth_shape=(480, 640), visualize=False):
+def landmarks_dist(png, raw, identity, expression, depth_shape=(480, 640), visualize=False):
     # === Caricamento immagini ===
-    if png is str:
-        image = cv2.imread(png)
-        depth_map = np.fromfile(raw, dtype=np.uint16).reshape(depth_shape)
-    else:
-        image = cv2.imdecode(np.frombuffer(png, np.uint8), cv2.IMREAD_COLOR)
-        depth_map = np.frombuffer(raw, dtype=np.uint16).reshape(depth_shape)
+    image = cv2.imread(png)
+    depth_map = np.fromfile(raw, dtype=np.uint16).reshape(depth_shape)
 
     # === Face Alignment ===
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -35,15 +31,29 @@ def landmarks_dist(png, raw, depth_shape=(480, 640), visualize=False):
         return None
 
     landmark_ids = {
-        'ensx': 36, 'exsx': 39, 'se': 27, 'prn': 30, 'alsx': 31, 'sn': 33,
-        'cheilion_sx': 48, 'cheilion_dx': 54, 'ls': 51, 'li': 57,
-        'gn': 8, 'ensdx': 45, 'alsdx': 35
+        'ensx': 36, 
+        'exsx': 39, 
+        'se': 27, 
+        'prn': 30, 
+        'alsx': 31, 
+        'sn': 33,
+        'cheilion_sx': 48, 
+        'cheilion_dx': 54, 
+        'ls': 51, 
+        'li': 57,
+        'gn': 8, 
+        'ensdx': 45, 
+        'alsdx': 35,
+        'exdx': 42,
     }
 
     opposite_landmarks = {
-        'ensx': 'ensdx', 'ensdx': 'ensx',
-        'alsx': 'alsdx', 'alsdx': 'alsx',
-        'cheilion_sx': 'cheilion_dx', 'cheilion_dx': 'cheilion_sx',
+        'ensx': 'ensdx', 
+        'ensdx': 'ensx',
+        'alsx': 'alsdx', 
+        'alsdx': 'alsx',
+        'cheilion_sx': 'cheilion_dx', 
+        'cheilion_dx': 'cheilion_sx',
     }
 
     landmarks_3d = {}
@@ -83,21 +93,26 @@ def landmarks_dist(png, raw, depth_shape=(480, 640), visualize=False):
 
     # === Distanze ===
     distance_pairs = [
-        ("ensx", "se"), ("ensx", "exsx"), ("se", "prn"), ("se", "alsx"),
-        ("prn", "alsx"), ("ensx", "alsx"), ("prn", "sn"), ("alsx", "sn"),
-        ("ensx", "prn"), ("alsx", "exsx"), ("alsx", "cheilion_sx"),
-        ("ensx", "cheilion_sx"), ("prn", "cheilion_sx"), ("se", "gn"),
-        ("ls", "li"), ("se", "ls"), ("ensx", "ensdx"), ("alsx", "alsdx"),
-        ("cheilion_sx", "cheilion_dx")
+        ("ensx", "se"),
+        ("ensx", "exsx"),
+        ("se", "prn"),
+        ("ensx", "prn"),
+        ("se", "ls"),
+        ("ensx", "ensdx"),
+        ("alsx", "alsdx"),
+        ("cheilion_sx", "cheilion_dx"),
+        ("prn", "ls"),
+        ("ensdx", "exdx"),
+        ("exsx", "exdx"),
     ]
 
-    distances = {}
+    distances = []
     for a, b in distance_pairs:
         if a in landmarks_3d and b in landmarks_3d:
             d = dist(landmarks_3d[a], landmarks_3d[b])
-            distances[f"dist_{a}_{b}"] = round(d / ref_dist, 4)
+            distances.append(round(d / ref_dist, 4))
         else:
-            distances[f"dist_{a}_{b}"] = None
+            distances.append(None)
 
     # === Aree ===
     area_triplets = [
@@ -109,13 +124,13 @@ def landmarks_dist(png, raw, depth_shape=(480, 640), visualize=False):
         ("se", "prn", "alsdx"),
     ]
 
-    areas = {}
+    areas = []
     for a, b, c in area_triplets:
         if all(k in landmarks_3d for k in [a, b, c]):
             val = area_triangle(landmarks_3d[a], landmarks_3d[b], landmarks_3d[c])
-            areas[f"area_{a}_{b}_{c}"] = round(val / ref_area, 4)
+            areas.append(round(val / ref_area, 4))
         else:
-            areas[f"area_{a}_{b}_{c}"] = None
+            areas.append(None)
 
     # === Volumi ===
     volume_quads = [
@@ -125,31 +140,26 @@ def landmarks_dist(png, raw, depth_shape=(480, 640), visualize=False):
         ("exsx", "ensdx", "alsx", "alsdx")
     ]
 
-    volumes = {}
+    volumes = []
     for a, b, c, d in volume_quads:
         if all(k in landmarks_3d for k in [a, b, c, d]):
             val = volume_tetra(landmarks_3d[a], landmarks_3d[b], landmarks_3d[c], landmarks_3d[d])
-            volumes[f"volume_{a}_{b}_{c}_{d}"] = round(val / ref_volume, 4)
+            volumes.append(round(val / ref_volume, 4))
         else:
-            volumes[f"volume_{a}_{b}_{c}_{d}"] = None
+            volumes.append(None)
 
-    # Visualizza landmarks
-    if visualize:
-        img_copy = image.copy()
-        for name, (x, y, _) in landmarks_3d.items():
-            cv2.circle(img_copy, (x, y), 4, (0, 255, 0), -1)
-            cv2.putText(img_copy, name, (x + 5, y - 5),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
-        cv2.imshow("Landmarks", img_copy)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+    facial_area = float(sum(v for v in areas if v is not None)) if any(areas) else None
+    # Restituisce solo le liste di distanze, aree e volumi
+    feature_vector = []
+    feature_vector.extend(distances)
+    feature_vector.extend(areas)
+    feature_vector.extend(volumes)
+    feature_vector.append(facial_area)
 
-    return {
-        "distances": distances,
-        "areas": areas,
-        "volumes": volumes,
-        "facial_area": round(sum(v for v in areas.values() if v is not None), 4)
-    }
+    # Sostituisci None con 0 (o meglio: media del training set, se hai salvato)
+    feature_vector = [0 if v is None else v for v in feature_vector]
 
-'''results = landmarks_dist("ciccia1_Color.png", "ciccia1_Depth.raw", visualize=True)
-print("Results:", results)'''
+    return feature_vector
+
+feature_vector = landmarks_dist("ciccia1_Color.png", "ciccia1_Depth.raw", "ciccia1", "neutral")
+print("Feature Vector:", feature_vector)

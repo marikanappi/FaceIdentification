@@ -4,6 +4,7 @@ from torch.utils.data import DataLoader, random_split
 import matplotlib.pyplot as plt
 import random
 import numpy as np
+import joblib
 
 from data_utils import load_data
 from model import FaceClassifier
@@ -41,7 +42,7 @@ def run_training():
 
     input_dim = train_dataset[0][0].shape[0]
     num_classes = len(label_encoder.classes_)
-
+    print(f"Input dimension: {input_dim}, Number of classes: {num_classes}")
     model = FaceClassifier(input_dim, num_classes).to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=lr)
@@ -103,3 +104,6 @@ def run_training():
 
     torch.save(model.state_dict(), "best_model.pth")
     print("💾 Best model saved as best_model.pth")
+
+    joblib.dump(label_encoder, "label_encoder.pkl")
+    print("💾 Label encoder saved as label_encoder.pkl")

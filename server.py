@@ -1,15 +1,33 @@
 import socket
 import struct
 from landmarks import landmarks_dist
+import torch
+from model import FaceClassifier
+import joblib
+import numpy as np
+import os
+from tempfile import NamedTemporaryFile
+from predict import predict_identity
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# Caricamento modello e risorse
+model = FaceClassifier(input_dim=22, num_classes=111)  
+model.load_state_dict(torch.load("best_model.pth", map_location=device))
+model.to(device)
+model.eval()
+
+label_encoder = joblib.load("label_encoder.pkl")
+scaler = joblib.load("scaler.pkl")
+
+# Configurazione server
 HOST = '0.0.0.0'
 PORT = 5005
 BUFFER_SIZE = 65536
-IDLE_TIMEOUT = None  # No timeout while waiting for first data
-PROCESSING_TIMEOUT = 30.0  # 30-second timeout during processing
+IDLE_TIMEOUT = None
+PROCESSING_TIMEOUT = 30.0
 
 def recv_exact(sock, n):
-    """Receive exactly n bytes with no timeout"""
     sock.settimeout(IDLE_TIMEOUT)
     data = b''
     while len(data) < n:
@@ -24,59 +42,62 @@ def handle_client(conn, addr):
     try:
         print(f"\nConnection accepted from {addr}")
         
-        while True:  # Main loop to keep connection alive
+        while True:
             try:
-                # Phase 1: Wait indefinitely for first data
                 conn.settimeout(IDLE_TIMEOUT)
                 
-                # Receive PNG length (blocks forever until data arrives)
+                # Ricezione PNG
                 png_len_bytes = recv_exact(conn, 4)
-                if not png_len_bytes:  # Client closed connection
+                if not png_len_bytes:
                     print(f"Client {addr} gracefully disconnected")
                     break
                     
                 png_len = struct.unpack('<I', png_len_bytes)[0]
                 print(f"Receiving PNG ({png_len/1024:.1f} KB)...")
                 
-                # Phase 2: Switch to processing timeout
                 conn.settimeout(PROCESSING_TIMEOUT)
-                
-                # Receive PNG data
                 png_data = recv_exact(conn, png_len)
                 
-                # Receive RAW length
+                # Ricezione RAW
                 raw_len = struct.unpack('<I', recv_exact(conn, 4))[0]
                 print(f"Receiving RAW ({raw_len/1024:.1f} KB)...")
-                
-                # Receive RAW data
                 raw_data = recv_exact(conn, raw_len)
 
-                # Process data with timeout protection
-                print("Processing landmarks...")
-                results = landmarks_dist(png_data, raw_data)
-                
-                print(results)  # Print results for debugging
+                # Salvataggio temporaneo dei file
+                with NamedTemporaryFile(delete=False, suffix='.png') as png_file, \
+                     NamedTemporaryFile(delete=False, suffix='.raw') as raw_file:
+                    png_file.write(png_data)
+                    raw_file.write(raw_data)
+                    png_path = png_file.name
+                    raw_path = raw_file.name
 
-                # Send response
-                conn.sendall(results.encode('utf-8') + b'\x00')
-                print("Response sent successfully")
-                
-                # Reset to idle timeout for next request
-                conn.settimeout(IDLE_TIMEOUT)
+                try:
+                    print("Processing landmarks...")
+                    features = landmarks_dist(png_path, raw_path, "unknown", "neutral")
+                    
+                    predicted_label, confidence = predict_identity(features)
+
+                    print(f"✅ Prediction: {predicted_label} (confidence={confidence:.2f})")
+                    conn.sendall(predicted_label.encode('utf-8') + b'\x00')
+
+                finally:
+                    # Pulizia dei file temporanei
+                    os.unlink(png_path)
+                    os.unlink(raw_path)
 
             except socket.timeout:
-                print(f"Processing timeout with {addr} - operation took too long")
+                print(f"Processing timeout with {addr}")
                 conn.sendall(b"Error: Processing timeout\x00")
-                continue  # Continue to next request
+                continue
                 
             except struct.error:
                 print(f"Client {addr} sent malformed data length")
-                break  # Break connection on protocol errors
+                break
                 
             except Exception as e:
                 print(f"Error processing request: {str(e)}")
                 conn.sendall(f"Error: {str(e)}\x00".encode())
-                continue  # Continue to next request
+                continue
 
     except ConnectionError as e:
         print(f"Connection error with {addr}: {str(e)}")
@@ -96,7 +117,6 @@ def run_server():
         while True:
             try:
                 conn, addr = s.accept()
-                # Handle client in same thread (for simplicity)
                 handle_client(conn, addr)
             except KeyboardInterrupt:
                 print("\nServer shutting down...")
@@ -104,6 +124,3 @@ def run_server():
             except Exception as e:
                 print(f"Error accepting connection: {str(e)}")
                 continue
-
-if __name__ == "__main__":
-    run_server()

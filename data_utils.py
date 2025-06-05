@@ -2,7 +2,7 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 from sklearn.preprocessing import LabelEncoder, StandardScaler
-
+import joblib
 class FaceDataset(Dataset):
     def __init__(self, features, labels):
         if isinstance(features, torch.Tensor):
@@ -35,7 +35,8 @@ def load_data(csv_path, split=0.8):
     # Feature scaling
     scaler = StandardScaler()
     features = scaler.fit_transform(features)
-
+    joblib.dump(scaler, "scaler.pkl")
+    
     # Shuffle and split
     total = len(labels)
     indices = torch.randperm(total)
