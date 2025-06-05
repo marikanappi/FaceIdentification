@@ -161,5 +161,5 @@ def landmarks_dist(png, raw, identity, expression, depth_shape=(480, 640), visua
 
     return feature_vector
 
-feature_vector = landmarks_dist("ciccia1_Color.png", "ciccia1_Depth.raw", "ciccia1", "neutral")
-print("Feature Vector:", feature_vector)
+'''feature_vector = landmarks_dist("ciccia1_Color.png", "ciccia1_Depth.raw", "ciccia1", "neutral")
+print("Feature Vector:", feature_vector)'''
