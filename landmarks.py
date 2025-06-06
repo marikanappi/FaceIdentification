@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import face_alignment
 import torch
+from PIL import Image
 
 def dist(p1, p2):
     return np.linalg.norm(np.array(p1) - np.array(p2))
@@ -21,11 +22,13 @@ def landmarks_dist(png, raw, identity, expression, depth_shape=(480, 640), visua
     # === Caricamento immagini ===
     image = cv2.imread(png)
     depth_map = np.fromfile(raw, dtype=np.uint16).reshape(depth_shape)
-
-     # === Verifica e allineamento depth map ===
-    if image.shape[0] != depth_map.shape[0] or image.shape[1] != depth_map.shape[1]:
-        # Ridimensiona la depth map per corrispondere alle dimensioni dell'immagine
-        depth_map = cv2.resize(depth_map, (image.shape[1], image.shape[0]))
+    #depth_map = align_depth_to_image(depth_map, image, visualize=visualize)
+    depth_vis = cv2.normalize(depth_map, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+    depth_vis = cv2.applyColorMap(depth_vis, cv2.COLORMAP_JET)
+    blended = cv2.addWeighted(image, 0.7, depth_vis, 0.3, 0)
+    cv2.imshow("Aligned Depth on RGB", blended)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
     # === Face Alignment ===
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -165,3 +168,9 @@ def landmarks_dist(png, raw, identity, expression, depth_shape=(480, 640), visua
     feature_vector = [0 if v is None else v for v in feature_vector]
 
     return feature_vector
+
+# example:
+path_image = "alessandra1_Color.png"
+path_depth = "alessandra1_Depth.raw"
+features = landmarks_dist(path_image, path_depth, "unknown", "neutral", visualize=True)
+print("Feature vector:", features)
