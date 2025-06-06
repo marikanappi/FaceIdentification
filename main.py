@@ -7,6 +7,6 @@ if __name__ == "__main__":
     run_training()
     run_test()
     print("Avvio server TCP per ricevere immagini da Unity...")
-    config()
+    '''config()
     from server import run_server  
-    run_server()
+    run_server()'''

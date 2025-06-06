@@ -21,13 +21,13 @@ def run_training():
     seed = 0
     val_split = 0.2
 
-    # === Seed per riproducibilità ===
+    '''# === Seed per riproducibilità ===
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.benchmark = False'''
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
