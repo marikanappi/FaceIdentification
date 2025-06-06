@@ -2,6 +2,11 @@ import cv2
 import numpy as np
 import face_alignment
 import torch
+import numpy as np
+import matplotlib.pyplot as plt
+from PIL import Image
+import os
+import csv
 
 def dist(p1, p2):
     return np.linalg.norm(np.array(p1) - np.array(p2))
@@ -16,10 +21,6 @@ def volume_tetra(a, b, c, d):
     return abs(np.dot((np.array(a) - np.array(d)), 
                       np.cross(np.array(b) - np.array(d), 
                                np.array(c) - np.array(d)))) / 6
-
-import numpy as np
-import matplotlib.pyplot as plt
-from PIL import Image
 
 def show_overlay(rgb_path, depth_path, width, height, depth_dtype='uint16'):
     """
@@ -55,15 +56,11 @@ def show_overlay(rgb_path, depth_path, width, height, depth_dtype='uint16'):
     plt.axis('off')
     plt.show()
 
+
 def landmarks_dist(png, raw, identity, expression, depth_shape=(480, 640), visualize=False):
     # === Caricamento immagini ===
     image = cv2.imread(png)
     depth_map = np.fromfile(raw, dtype=np.uint16).reshape(depth_shape)
-
-     # === Verifica e allineamento depth map ===
-    if image.shape[0] != depth_map.shape[0] or image.shape[1] != depth_map.shape[1]:
-        # Ridimensiona la depth map per corrispondere alle dimensioni dell'immagine
-        depth_map = cv2.resize(depth_map, (image.shape[1], image.shape[0]))
 
     # === Face Alignment ===
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -203,3 +200,52 @@ def landmarks_dist(png, raw, identity, expression, depth_shape=(480, 640), visua
     feature_vector = [0 if v is None else v for v in feature_vector]
 
     return feature_vector
+
+### CODICE DA CAMBIARE !!
+'''# Intestazioni del CSV
+headers = [
+    "identity", "expression", "filename",
+    "dist_ensx_se", "dist_ensx_prn", "dist_se_prn", "dist_se_ls", "dist_prn_ls",
+    "dist_alL_alR", "dist_cheilion_sx_cheilion_dx", "dist_ensx_exsx", "dist_ensdx_exdx",
+    "dist_exsx_exdx", "dist_ensx_ensdx",
+    "area_ensx_exsx_exdx", "area_prn_alL_alR", "area_cheilion_sx_cheilion_dx_ls",
+    "area_ensx_ensdx_prn", "area_se_prn_alL", "area_se_prn_alR",
+    "volume_ensx_prn_alL_alR", "volume_ensx_exsx_exdx_prn",
+    "volume_ensx_ensdx_se_prn", "volume_exsx_exdx_alL_alR",
+    "facial_area"
+]
+
+# Percorso del file CSV
+csv_path = "Dataset_facial_features_standard.csv"
+
+# Controlla se il file esiste già per decidere se scrivere l'header
+file_exists = os.path.exists(csv_path)
+
+with open(csv_path, mode='a', newline='') as csv_file:
+    writer = csv.writer(csv_file)
+    
+    # Scrivi l'header solo se il file non esisteva
+    if not file_exists:
+        writer.writerow(headers)
+    
+    for i in range(1, 16):
+        png = f"francesca{i}_Color.png"
+        raw = f"francesca{i}_Depth.raw"
+        identity = "francesca"
+        expression = "neutral"
+        
+        # Estrai le feature
+        features = landmarks_dist(png, raw, identity, expression)
+        
+        if features is not None:
+            # Prepara la riga da scrivere
+            filename = os.path.basename(png)
+            row = [identity, expression, filename] + features
+            
+            # Scrivi la riga nel CSV
+            writer.writerow(row)
+            print(f"Features aggiunte per {filename}")
+        else:
+            print(f"Nessun volto rilevato in {png}")
+
+print("Dataset aggiornato con successo!")'''
