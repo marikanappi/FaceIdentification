@@ -202,8 +202,8 @@ def landmarks_dist(png, raw, identity, expression, depth_shape=(480, 640), visua
     return feature_vector
 
 ### CODICE DA CAMBIARE !!
-'''# Intestazioni del CSV
-headers = [
+# Intestazioni del CSV
+'''headers = [
     "identity", "expression", "filename",
     "dist_ensx_se", "dist_ensx_prn", "dist_se_prn", "dist_se_ls", "dist_prn_ls",
     "dist_alL_alR", "dist_cheilion_sx_cheilion_dx", "dist_ensx_exsx", "dist_ensdx_exdx",
@@ -228,10 +228,10 @@ with open(csv_path, mode='a', newline='') as csv_file:
     if not file_exists:
         writer.writerow(headers)
     
-    for i in range(1, 16):
-        png = f"francesca{i}_Color.png"
-        raw = f"francesca{i}_Depth.raw"
-        identity = "francesca"
+    for i in range(1, 6):
+        png = rf'C:\Users\sagli\Desktop\frame_acquisizioni\ludovica{i}_Color.png'
+        raw = rf'C:\Users\sagli\Desktop\frame_acquisizioni\ludovica{i}_Depth.raw'
+        identity = "ludovica"
         expression = "neutral"
         
         # Estrai le feature
