@@ -228,10 +228,10 @@ with open(csv_path, mode='a', newline='') as csv_file:
     if not file_exists:
         writer.writerow(headers)
     
-    for i in range(1, 6):
-        png = rf'C:\Users\sagli\Desktop\frame_acquisizioni\ludovica{i}_Color.png'
-        raw = rf'C:\Users\sagli\Desktop\frame_acquisizioni\ludovica{i}_Depth.raw'
-        identity = "ludovica"
+    for i in range(1, 16):
+        png = rf'C:\Users\aless\Documents\polito\soluzioni 3d\ALE_acquisizioni\png\ale{i}_Color.png'
+        raw = rf'C:\Users\aless\Documents\polito\soluzioni 3d\ALE_acquisizioni\depth\ale{i}_Depth.raw'
+        identity = "alessandra"
         expression = "neutral"
         
         # Estrai le feature
