@@ -21,8 +21,8 @@ def run_training():
     seed = 0
     val_split = 0.2
 
-    '''# === Seed per riproducibilità ===
-    random.seed(seed)
+    # === Seed per riproducibilità ===
+    '''random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
