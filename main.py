@@ -1,9 +1,12 @@
 from run import run_training
 from test import run_test
-from server import run_server  # supponendo che tu metta il codice socket in server.py
+import numpy as np
+from config import config
 
 if __name__ == "__main__":
     run_training()
     run_test()
     print("Avvio server TCP per ricevere immagini da Unity...")
-    run_server()  
+    config()
+    from server import run_server  
+    run_server()

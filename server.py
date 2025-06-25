@@ -1,73 +1,126 @@
 import socket
 import struct
-import json
 from landmarks import landmarks_dist
+import torch
+from model import FaceClassifier
+import joblib
+import numpy as np
+import os
+from tempfile import NamedTemporaryFile
+from predict import predict_identity
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# Caricamento modello e risorse
+model = FaceClassifier(input_dim=22, num_classes=111)  
+model.load_state_dict(torch.load("best_model.pth", map_location=device))
+model.to(device)
+model.eval()
+
+label_encoder = joblib.load("label_encoder.pkl")
+scaler = joblib.load("scaler.pkl")
+
+# Configurazione server
 HOST = '0.0.0.0'
 PORT = 5005
+BUFFER_SIZE = 65536
+IDLE_TIMEOUT = None
+PROCESSING_TIMEOUT = 30.0
 
 def recv_exact(sock, n):
-    """Riceve esattamente n byte dal socket."""
+    sock.settimeout(IDLE_TIMEOUT)
     data = b''
     while len(data) < n:
-        packet = sock.recv(n - len(data))
+        remaining = n - len(data)
+        packet = sock.recv(min(remaining, BUFFER_SIZE))
         if not packet:
-            return None
+            raise ConnectionError("Connection closed prematurely")
         data += packet
     return data
 
+def handle_client(conn, addr):
+    try:
+        print(f"\nConnection accepted from {addr}")
+        
+        while True:
+            try:
+                conn.settimeout(IDLE_TIMEOUT)
+                
+                # Ricezione PNG
+                png_len_bytes = recv_exact(conn, 4)
+                if not png_len_bytes:
+                    print(f"Client {addr} gracefully disconnected")
+                    break
+                    
+                png_len = struct.unpack('<I', png_len_bytes)[0]
+                print(f"Receiving PNG ({png_len/1024:.1f} KB)...")
+                
+                conn.settimeout(PROCESSING_TIMEOUT)
+                png_data = recv_exact(conn, png_len)
+                
+                # Ricezione RAW
+                raw_len = struct.unpack('<I', recv_exact(conn, 4))[0]
+                print(f"Receiving RAW ({raw_len/1024:.1f} KB)...")
+                raw_data = recv_exact(conn, raw_len)
+
+                # Salvataggio temporaneo dei file
+                with NamedTemporaryFile(delete=False, suffix='.png') as png_file, \
+                     NamedTemporaryFile(delete=False, suffix='.raw') as raw_file:
+                    png_file.write(png_data)
+                    raw_file.write(raw_data)
+                    png_path = png_file.name
+                    raw_path = raw_file.name
+
+                try:
+                    print("Processing landmarks...")
+                    features = landmarks_dist(png_path, raw_path, "unknown", "neutral")
+                    
+                    predicted_label, confidence = predict_identity(features)
+
+                    print(f"✅ Prediction: {predicted_label} (confidence={confidence:.2f})")
+                    conn.sendall(predicted_label.encode('utf-8') + b'\x00')
+
+                finally:
+                    # Pulizia dei file temporanei
+                    os.unlink(png_path)
+                    os.unlink(raw_path)
+
+            except socket.timeout:
+                print(f"Processing timeout with {addr}")
+                conn.sendall(b"Error: Processing timeout\x00")
+                continue
+                
+            except struct.error:
+                print(f"Client {addr} sent malformed data length")
+                break
+                
+            except Exception as e:
+                print(f"Error processing request: {str(e)}")
+                conn.sendall(f"Error: {str(e)}\x00".encode())
+                continue
+
+    except ConnectionError as e:
+        print(f"Connection error with {addr}: {str(e)}")
+    except Exception as e:
+        print(f"Unexpected error with {addr}: {str(e)}")
+    finally:
+        conn.close()
+        print(f"Connection with {addr} closed")
+
 def run_server():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.bind((HOST, PORT))
         s.listen()
-        print(f"Server in ascolto su {HOST}:{PORT}")
-
+        print(f"Server started on {HOST}:{PORT} (Processing timeout: {PROCESSING_TIMEOUT}s)")
+        
         while True:
-            conn, addr = s.accept()
-            with conn:
-                print(f"Connessione da {addr}")
-
-                # Ricevi la lunghezza PNG (4 byte, int)
-                data = recv_exact(conn, 4)
-                if data is None:
-                    print("Connessione chiusa prematuramente")
-                    continue
-                png_len = struct.unpack('!I', data)[0]  # network byte order
-
-                # Ricevi PNG
-                png_bytes = recv_exact(conn, png_len)
-                if png_bytes is None:
-                    print("Errore ricezione PNG")
-                    continue
-                with open("input.png", "wb") as f:
-                    f.write(png_bytes)
-
-                # Ricevi lunghezza RAW
-                data = recv_exact(conn, 4)
-                if data is None:
-                    print("Connessione chiusa prematuramente")
-                    continue
-                raw_len = struct.unpack('!I', data)[0]
-
-                # Ricevi RAW
-                raw_bytes = recv_exact(conn, raw_len)
-                if raw_bytes is None:
-                    print("Errore ricezione RAW")
-                    continue
-                with open("input.raw", "wb") as f:
-                    f.write(raw_bytes)
-
-                # Chiama landmarks_dist
-                distances = landmarks_dist("input.png", "input.raw")
-
-                if distances is None:
-                    response = "No face detected"
-                else:
-                    response = json.dumps(distances)
-
-                # Invia la risposta come stringa terminata da \0 (per allinearsi allo script Unity)
-                conn.sendall(response.encode('utf-8') + b'\0')
-
-                print("Risposta inviata.")
-
-
+            try:
+                conn, addr = s.accept()
+                handle_client(conn, addr)
+            except KeyboardInterrupt:
+                print("\nServer shutting down...")
+                break
+            except Exception as e:
+                print(f"Error accepting connection: {str(e)}")
+                continue
