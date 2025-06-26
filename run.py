@@ -16,7 +16,7 @@ def run_training():
     csv_path = 'Dataset_facial_features_standard.csv'
     batch_size = 32
     lr = 1e-3
-    num_epochs = 100
+    num_epochs = 200
     patience = 20
     seed = 0
     val_split = 0.2
