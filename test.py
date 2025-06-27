@@ -55,7 +55,7 @@ def evaluate(model, dataloader, criterion, device, threshold=0.5):
     return avg_loss, accuracy
 
 def run_test():
-    csv_path = 'Dataset_facial_features_standard.csv'
+    csv_path = 'dataset_features_final.csv'
     batch_size = 32
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

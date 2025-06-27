@@ -13,16 +13,16 @@ from test import evaluate
 
 def run_training():
     # === Config ===
-    csv_path = 'Dataset_facial_features_standard.csv'
+    csv_path = 'dataset_features_final.csv'
     batch_size = 32
     lr = 1e-3
     num_epochs = 200
     patience = 20
-    seed = 0
+    seed = 42
     val_split = 0.2
 
-    # === Seed per riproducibilità ===
-    '''random.seed(seed)
+    '''# === Seed per riproducibilità ===
+    random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)

@@ -5,7 +5,7 @@ import joblib
 def config():
     MODEL_PATH = "best_model.pth"
     ENCODER_PATH = "label_encoder.pkl" 
-    INPUT_DIM = 22  
+    INPUT_DIM = 40
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -16,3 +16,5 @@ def config():
     model = FaceClassifier(INPUT_DIM, num_classes).to(device)
     model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
     model.eval()
+
+    return model, label_encoder, device

@@ -12,7 +12,7 @@ from predict import predict_identity
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Caricamento modello e risorse
-model = FaceClassifier(input_dim=22, num_classes=111)  
+model = FaceClassifier(input_dim=40, num_classes=111)  
 model.load_state_dict(torch.load("best_model.pth", map_location=device))
 model.to(device)
 model.eval()
@@ -124,3 +124,4 @@ def run_server():
             except Exception as e:
                 print(f"Error accepting connection: {str(e)}")
                 continue
+
