@@ -19,18 +19,18 @@ def run_training():
     csv_path = 'dataset_features_final.csv'
     batch_size = 32
     lr = 1e-3
-    num_epochs = 200
+    num_epochs = 100
     patience = 20
     seed = 42
     val_split = 0.2
 
-    '''# === Seed per riproducibilità ===
+    # === Seed per riproducibilità ===
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False'''
+    torch.backends.cudnn.benchmark = False
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -92,74 +92,84 @@ def run_training():
 
     # === Final evaluation with confusion matrix ===
     final_val_loss, final_val_acc, final_val_precision, final_val_recall, final_val_f1, final_inf_time, y_true, y_pred = evaluate(model, val_loader, criterion, device, return_predictions=True)
-    
-    # Confusion Matrix / Interpretability Matrix
-    cm = confusion_matrix(y_true, y_pred)
     class_names = label_encoder.classes_
     
-    plt.figure(figsize=(15, 12))
-    
-    # Plot 1: Training curves
-    plt.subplot(2, 3, 1)
-    plt.plot(train_losses, label='Train Loss')
+        # === Plot 1: Training Loss ===
+    plt.figure(figsize=(8,6))
+    plt.plot(train_losses, label='Train Loss', color='blue')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.title('Training Loss')
     plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig("train_loss.png", dpi=300)
+    plt.close()
+    print("📊 Training loss plot salvato in train_loss.png")
 
-    plt.subplot(2, 3, 2)
-    plt.plot(train_accuracies, label='Train Acc')
-    plt.plot(val_accuracies, label='Val Acc')
+    # === Plot 2: Accuracy ===
+    plt.figure(figsize=(8,6))
+    plt.plot(train_accuracies, label='Train Accuracy', color='green')
+    plt.plot(val_accuracies, label='Validation Accuracy', color='red')
     plt.xlabel('Epoch')
     plt.ylabel('Accuracy')
     plt.title('Accuracy')
     plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig("accuracy.png", dpi=300)
+    plt.close()
+    print("📊 Accuracy plot salvato in accuracy.png")
 
-    # Plot 2: Precision, Recall, F1
-    plt.subplot(2, 3, 3)
-    plt.plot(val_precisions, label='Precision', alpha=0.7)
-    plt.plot(val_recalls, label='Recall', alpha=0.7)
-    plt.plot(val_f1s, label='F1-Score', alpha=0.7)
+    # === Plot 3a: Precision ===
+    plt.figure(figsize=(8,6))
+    plt.plot(val_precisions, label='Precision', color='purple')
     plt.xlabel('Epoch')
-    plt.ylabel('Score')
-    plt.title('Precision, Recall, F1-Score')
+    plt.ylabel('Precision')
+    plt.title('Validation Precision')
     plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig("precision.png", dpi=300)
+    plt.close()
+    print("📊 Precision plot salvato in precision.png")
 
-    # Plot 3: Inference Time
-    plt.subplot(2, 3, 4)
-    plt.plot([t*1000 for t in val_inference_times], label='Inference Time', color='orange')
+    # === Plot 3b: Recall ===
+    plt.figure(figsize=(8,6))
+    plt.plot(val_recalls, label='Recall', color='brown')
+    plt.xlabel('Epoch')
+    plt.ylabel('Recall')
+    plt.title('Validation Recall')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig("recall.png", dpi=300)
+    plt.close()
+    print("📊 Recall plot salvato in recall.png")
+
+    # === Plot 3c: F1-Score ===
+    plt.figure(figsize=(8,6))
+    plt.plot(val_f1s, label='F1-Score', color='darkcyan')
+    plt.xlabel('Epoch')
+    plt.ylabel('F1-Score')
+    plt.title('Validation F1-Score')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig("f1_score.png", dpi=300)
+    plt.close()
+    print("📊 F1-Score plot salvato in f1_score.png")
+
+
+    # === Plot 4: Average Inference Time ===
+    plt.figure(figsize=(8,6))
+    plt.plot([t*1000 for t in val_inference_times], label='Inference Time (ms)', color='orange')
     plt.xlabel('Epoch')
     plt.ylabel('Time (ms)')
     plt.title('Average Inference Time')
     plt.legend()
-
-    # Plot 4: Confusion Matrix / Interpretability Matrix
-    plt.subplot(2, 3, (5, 6))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
-                xticklabels=class_names, yticklabels=class_names)
-    plt.title('Confusion Matrix (Interpretability)')
-    plt.ylabel('True Label')
-    plt.xlabel('Predicted Label')
-    plt.xticks(rotation=45)
-    plt.yticks(rotation=0)
-
+    plt.grid(True)
     plt.tight_layout()
-    plt.savefig("training_metrics.png", dpi=300, bbox_inches='tight')
-    print("📊 Training metrics saved to training_metrics.png")
-
-    # Print final metrics summary
-    print("\n" + "="*50)
-    print("FINAL METRICS SUMMARY")
-    print("="*50)
-    print(f"Final Validation Accuracy: {final_val_acc*100:.2f}%")
-    print(f"Final Validation Precision: {final_val_precision:.3f}")
-    print(f"Final Validation Recall: {final_val_recall:.3f}")
-    print(f"Final Validation F1-Score: {final_val_f1:.3f}")
-    print(f"Average Inference Time: {final_inf_time*1000:.2f}ms")
-    print("="*50)
-
-    torch.save(model.state_dict(), "best_model.pth")
-    print("💾 Best model saved as best_model.pth")
-
-    joblib.dump(label_encoder, "label_encoder.pkl")
-    print("💾 Label encoder saved as label_encoder.pkl")
+    plt.savefig("inference_time.png", dpi=300)
+    plt.close()
+    print("📊 Inference time plot salvato in inference_time.png")

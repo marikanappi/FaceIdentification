@@ -2,13 +2,13 @@ import torch
 from torch.utils.data import DataLoader
 from torch import nn
 import numpy as np
-from sklearn.metrics import precision_recall_fscore_support, confusion_matrix
+from sklearn.metrics import precision_recall_fscore_support
 import time
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 from data_utils import load_data
 from model import FaceClassifier
+
+
 
 def predict_with_unknown(model, X, device, threshold=0.5, label_encoder=None):
     model.eval()
@@ -130,27 +130,6 @@ def run_test():
     print(f"🧪 Average Inference Time: {test_inf_time*1000:.2f}ms")
     print("="*60)
 
-    # Create test confusion matrix
-    valid_mask = np.array(y_pred) != -1
-    valid_y_true = np.array(y_true)[valid_mask]
-    valid_y_pred = np.array(y_pred)[valid_mask]
-    
-    if len(valid_y_true) > 0:
-        cm = confusion_matrix(valid_y_true, valid_y_pred)
-        class_names = label_encoder.classes_
-        
-        plt.figure(figsize=(10, 8))
-        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
-                    xticklabels=class_names, yticklabels=class_names)
-        plt.title('Test Set - Confusion Matrix (Interpretability)')
-        plt.ylabel('True Label')
-        plt.xlabel('Predicted Label')
-        plt.xticks(rotation=45)
-        plt.yticks(rotation=0)
-        plt.tight_layout()
-        plt.savefig("test_confusion_matrix.png", dpi=300, bbox_inches='tight')
-        print("📊 Test confusion matrix saved to test_confusion_matrix.png")
-
     # Test predizioni con unknown su un batch
     test_batch = next(iter(test_loader))
     X_batch, y_batch = test_batch
@@ -166,3 +145,4 @@ def run_test():
     print("\nEsempio predizioni (con unknown):")
     for true_label, pred in zip(true_labels, preds_with_unknown):
         print(f"Vero: {true_label} | Predetto: {pred}")
+    
