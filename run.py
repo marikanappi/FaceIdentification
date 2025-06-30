@@ -21,24 +21,22 @@ def run_training():
     lr = 1e-3
     num_epochs = 100
     patience = 20
-    seed = 42
+    seed = 0
     val_split = 0.2
 
     # === Seed per riproducibilità ===
-    random.seed(seed)
+    '''random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.benchmark = False'''
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # === Load data ===
-    full_dataset, _, label_encoder = load_data(csv_path)
-    val_size = int(len(full_dataset) * val_split)
-    train_size = len(full_dataset) - val_size
-    train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size])
+    train_dataset, val_dataset, test_dataset, label_encoder = load_data(csv_path)
+
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)

@@ -102,7 +102,7 @@ def run_test():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # Load test data
-    _, test_dataset, label_encoder = load_data(csv_path)
+    _, _, test_dataset, label_encoder = load_data(csv_path)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
     input_dim = test_dataset[0][0].shape[0]

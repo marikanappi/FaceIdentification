@@ -20,36 +20,32 @@ class FaceDataset(Dataset):
     def __getitem__(self, idx):
         return self.features[idx], self.labels[idx]
 
-def load_data(csv_path, split=0.8):
-    # Load CSV
+def load_data(csv_path, train_split=0.7, val_split=0.15, test_split=0.15, seed=42):
+    assert abs(train_split + val_split + test_split - 1.0) < 1e-6, "Splits must sum to 1.0"
+    
     df = pd.read_csv(csv_path)
-
-    # Extract labels and features
     identities = df['identity'].values
     features = df.drop(columns=['identity', 'expression', 'filename']).values.astype('float32')
 
-    # Label encoding
     label_encoder = LabelEncoder()
     labels = label_encoder.fit_transform(identities)
 
-    # Feature scaling
     scaler = StandardScaler()
     features = scaler.fit_transform(features)
     joblib.dump(scaler, "scaler.pkl")
-    
-    # Shuffle and split
-    total = len(labels)
-    indices = torch.randperm(total)
-    train_size = int(split * total)
-
-    train_idx = indices[:train_size]
-    test_idx = indices[train_size:]
 
     features = torch.tensor(features, dtype=torch.float32)
     labels = torch.tensor(labels, dtype=torch.long)
 
-    # Create datasets
-    train_dataset = FaceDataset(features[train_idx], labels[train_idx])
-    test_dataset = FaceDataset(features[test_idx], labels[test_idx])
+    dataset = FaceDataset(features, labels)
 
-    return train_dataset, test_dataset, label_encoder
+    total_size = len(dataset)
+    train_size = int(train_split * total_size)
+    val_size = int(val_split * total_size)
+    test_size = total_size - train_size - val_size  # Resto
+
+    generator = torch.Generator().manual_seed(seed)
+    train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_size, val_size, test_size], generator=generator)
+
+    return train_dataset, val_dataset, test_dataset, label_encoder
+
