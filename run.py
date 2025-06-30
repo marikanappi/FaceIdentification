@@ -19,10 +19,9 @@ def run_training():
     csv_path = 'dataset_features_final.csv'
     batch_size = 32
     lr = 1e-3
-    num_epochs = 100
+    num_epochs = 120
     patience = 20
     seed = 0
-    val_split = 0.2
 
     # === Seed per riproducibilità ===
     '''random.seed(seed)
@@ -39,7 +38,7 @@ def run_training():
 
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
 
     input_dim = train_dataset[0][0].shape[0]
     num_classes = len(label_encoder.classes_)

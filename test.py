@@ -103,7 +103,7 @@ def run_test():
 
     # Load test data
     _, _, test_dataset, label_encoder = load_data(csv_path)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
 
     input_dim = test_dataset[0][0].shape[0]
     num_classes = len(label_encoder.classes_)

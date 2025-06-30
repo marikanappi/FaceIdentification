@@ -402,9 +402,3 @@ def process_folder_to_csv(folder_path, output_csv):
             except Exception as e:
                 print(f"Errore durante l'elaborazione di {rgb_file}: {str(e)}")
 
-feature_vector = landmarks_dist(
-    png='ale1_Color.png',
-    raw='ale1_Depth.raw',
-    identity='identity',
-    expression='expression'
-)
