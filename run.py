@@ -13,28 +13,28 @@ from data_utils import load_data
 from model import FaceClassifier
 from train import train
 from test import evaluate
-
-def run_training():
+def run_training():  # Modifica qui per accettare seed come parametro
     # === Config ===
     csv_path = 'dataset_features_final.csv'
     batch_size = 32
     lr = 1e-3
-    num_epochs = 120
+    num_epochs = 200
     patience = 20
-    seed = 0
-
-    # === Seed per riproducibilità ===
-    '''random.seed(seed)
+    seed = 42
+    
+    # Usa seed solo se specificato, altrimenti sarà None
+    random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False'''
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = (seed is not None)
+    torch.backends.cudnn.benchmark = (seed is None)  
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # === Load data ===
-    train_dataset, val_dataset, test_dataset, label_encoder = load_data(csv_path)
+    train_dataset, val_dataset, test_dataset, label_encoder = load_data(csv_path, seed=seed) 
 
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)

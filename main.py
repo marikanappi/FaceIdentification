@@ -4,7 +4,7 @@ import numpy as np
 from config import config
 
 if __name__ == "__main__":
-    run_training()
+    run_training()  # Esegui il training con un seed specifico
     run_test()
     '''print("Avvio server TCP per ricevere immagini da Unity...")
     config()

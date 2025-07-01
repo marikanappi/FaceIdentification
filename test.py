@@ -95,14 +95,14 @@ def evaluate(model, dataloader, criterion, device, threshold=0.5, return_predict
     else:
         return avg_loss, accuracy, precision, recall, f1, avg_inference_time
 
-def run_test():
+def run_test(seed=None):  # Aggiungi seed come parametro opzionale
     csv_path = 'dataset_features_final.csv'
     batch_size = 32
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    # Load test data
-    _, _, test_dataset, label_encoder = load_data(csv_path)
+    # Load test data con eventuale seed
+    _, _, test_dataset, label_encoder = load_data(csv_path, seed=seed)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
 
     input_dim = test_dataset[0][0].shape[0]
