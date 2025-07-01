@@ -8,19 +8,19 @@ import joblib
 import seaborn as sns
 from sklearn.metrics import confusion_matrix, precision_recall_fscore_support
 import time
-
 from data_utils import load_data
 from model import FaceClassifier
 from train import train
 from test import evaluate
-def run_training():  # Modifica qui per accettare seed come parametro
+
+def run_training(seed=None):  
     # === Config ===
     csv_path = 'dataset_features_final.csv'
-    batch_size = 32
+    batch_size = 64
     lr = 1e-3
-    num_epochs = 200
+    num_epochs = 150
     patience = 20
-    seed = 42
+    #seed = 42
     
     # Usa seed solo se specificato, altrimenti sarà None
     random.seed(seed)
@@ -37,8 +37,12 @@ def run_training():  # Modifica qui per accettare seed come parametro
     train_dataset, val_dataset, test_dataset, label_encoder = load_data(csv_path, seed=seed) 
 
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
+    g = torch.Generator()
+    g.manual_seed(seed)
+
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, generator=g)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True, generator=g)
+
 
     input_dim = train_dataset[0][0].shape[0]
     num_classes = len(label_encoder.classes_)
@@ -50,7 +54,7 @@ def run_training():  # Modifica qui per accettare seed come parametro
     train_losses, train_accuracies = [], []
     val_accuracies, val_precisions, val_recalls, val_f1s = [], [], [], []
     val_inference_times = []
-    best_acc = 0.0
+    best_val_loss = float('inf')
     best_model_state = None
     patience_counter = 0
 
@@ -67,12 +71,12 @@ def run_training():  # Modifica qui per accettare seed come parametro
         val_inference_times.append(val_inf_time)
 
         print(f"Epoch [{epoch+1}/{num_epochs}] "
-              f"Train Loss: {train_loss:.4f} | Train Acc: {train_acc*100:.2f}% | "
-              f"Val Acc: {val_acc*100:.2f}% | Val F1: {val_f1:.3f} | "
-              f"Val Inf Time: {val_inf_time*1000:.2f}ms")
+            f"Train Loss: {train_loss:.4f} | Train Acc: {train_acc*100:.2f}% | "
+            f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc*100:.2f}% | Val F1: {val_f1:.3f} | "
+            f"Val Inf Time: {val_inf_time*1000:.2f}ms")
 
-        if val_acc > best_acc:
-            best_acc = val_acc
+        if val_loss < best_val_loss - 1e-4:  # Un piccolo delta per evitare salvataggi dovuti a fluttuazioni minime
+            best_val_loss = val_loss
             best_model_state = model.state_dict()
             patience_counter = 0
         else:
@@ -81,10 +85,11 @@ def run_training():  # Modifica qui per accettare seed come parametro
                 print(f"⏹️ Early stopping at epoch {epoch+1}")
                 break
 
+
     if best_model_state is not None:
         model.load_state_dict(best_model_state)
 
-    print(f"✅ Best Validation Accuracy: {best_acc * 100:.2f}%")
+    print(f"✅ Best Validation Loss: {best_val_loss:.4f}")
     print(f"📊 Average Inference Time: {np.mean(val_inference_times)*1000:.2f}ms")
 
     # === Final evaluation with confusion matrix ===

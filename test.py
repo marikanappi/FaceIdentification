@@ -103,7 +103,10 @@ def run_test(seed=None):  # Aggiungi seed come parametro opzionale
 
     # Load test data con eventuale seed
     _, _, test_dataset, label_encoder = load_data(csv_path, seed=seed)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
+    g = torch.Generator()
+    g.manual_seed(seed)
+
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, generator=g)
 
     input_dim = test_dataset[0][0].shape[0]
     num_classes = len(label_encoder.classes_)
