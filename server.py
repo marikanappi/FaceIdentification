@@ -1,6 +1,6 @@
 import socket
 import struct
-from landmarks import landmarks_dist
+from landmarks import landmarks_dist, show_overlay
 import torch
 from model import FaceClassifier
 import joblib
@@ -57,6 +57,18 @@ def handle_client(conn, addr):
                 
                 conn.settimeout(PROCESSING_TIMEOUT)
                 png_data = recv_exact(conn, png_len)
+
+                # FLIP PNG
+                from PIL import Image
+                import io
+
+                png = Image.open(io.BytesIO(png_data))
+                # Flip verticale
+                png_flip = png.transpose(Image.FLIP_TOP_BOTTOM)
+                
+                with io.BytesIO() as output_bytes:
+                    png_flip.save(output_bytes, format='PNG')
+                    png_flip = output_bytes.getvalue()
                 
                 # Ricezione RAW
                 raw_len = struct.unpack('<I', recv_exact(conn, 4))[0]
@@ -66,7 +78,7 @@ def handle_client(conn, addr):
                 # Salvataggio temporaneo dei file
                 with NamedTemporaryFile(delete=False, suffix='.png') as png_file, \
                      NamedTemporaryFile(delete=False, suffix='.raw') as raw_file:
-                    png_file.write(png_data)
+                    png_file.write(png_flip)
                     raw_file.write(raw_data)
                     png_path = png_file.name
                     raw_path = raw_file.name
@@ -74,10 +86,10 @@ def handle_client(conn, addr):
                 try:
                     print("Processing landmarks...")
                     features = landmarks_dist(png_path, raw_path, "unknown", "neutral")
-                    
+                    show_overlay(png_path, raw_path, 640, 480)
                     predicted_label, confidence = predict_identity(features)
 
-                    print(f"✅ Prediction: {predicted_label} (confidence={confidence:.2f})")
+                    print(f"Prediction: {predicted_label} (confidence={confidence:.2f})")
                     conn.sendall(predicted_label.encode('utf-8') + b'\x00')
 
                 finally:
@@ -124,4 +136,3 @@ def run_server():
             except Exception as e:
                 print(f"Error accepting connection: {str(e)}")
                 continue
-

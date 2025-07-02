@@ -125,12 +125,12 @@ def run_test(seed=None):  # Aggiungi seed come parametro opzionale
     print("="*60)
     print("TEST RESULTS")
     print("="*60)
-    print(f"🧪 Test Loss: {test_loss:.4f}")
-    print(f"🧪 Test Accuracy: {test_acc*100:.2f}%")
-    print(f"🧪 Test Precision: {test_precision:.3f}")
-    print(f"🧪 Test Recall: {test_recall:.3f}")
-    print(f"🧪 Test F1-Score: {test_f1:.3f}")
-    print(f"🧪 Average Inference Time: {test_inf_time*1000:.2f}ms")
+    print(f"Test Loss: {test_loss:.4f}")
+    print(f"Test Accuracy: {test_acc*100:.2f}%")
+    print(f"Test Precision: {test_precision:.3f}")
+    print(f"Test Recall: {test_recall:.3f}")
+    print(f"Test F1-Score: {test_f1:.3f}")
+    print(f"Average Inference Time: {test_inf_time*1000:.2f}ms")
     print("="*60)
 
     # Test predizioni con unknown su un batch

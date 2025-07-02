@@ -20,7 +20,6 @@ def run_training(seed=None):
     lr = 1e-3
     num_epochs = 150
     patience = 20
-    #seed = 42
     
     # Usa seed solo se specificato, altrimenti sarà None
     random.seed(seed)
@@ -82,15 +81,15 @@ def run_training(seed=None):
         else:
             patience_counter += 1
             if patience_counter >= patience:
-                print(f"⏹️ Early stopping at epoch {epoch+1}")
+                print(f" Early stopping at epoch {epoch+1}")
                 break
 
 
     if best_model_state is not None:
         model.load_state_dict(best_model_state)
 
-    print(f"✅ Best Validation Loss: {best_val_loss:.4f}")
-    print(f"📊 Average Inference Time: {np.mean(val_inference_times)*1000:.2f}ms")
+    print(f"Best Validation Loss: {best_val_loss:.4f}")
+    print(f"Average Inference Time: {np.mean(val_inference_times)*1000:.2f}ms")
 
     # === Final evaluation with confusion matrix ===
     final_val_loss, final_val_acc, final_val_precision, final_val_recall, final_val_f1, final_inf_time, y_true, y_pred = evaluate(model, val_loader, criterion, device, return_predictions=True)
@@ -107,7 +106,7 @@ def run_training(seed=None):
     plt.tight_layout()
     plt.savefig("train_loss.png", dpi=300)
     plt.close()
-    print("📊 Training loss plot salvato in train_loss.png")
+    print(" Training loss plot salvato in train_loss.png")
 
     # === Plot 2: Accuracy ===
     plt.figure(figsize=(8,6))
@@ -121,7 +120,7 @@ def run_training(seed=None):
     plt.tight_layout()
     plt.savefig("accuracy.png", dpi=300)
     plt.close()
-    print("📊 Accuracy plot salvato in accuracy.png")
+    print(" Accuracy plot salvato in accuracy.png")
 
     # === Plot 3a: Precision ===
     plt.figure(figsize=(8,6))
@@ -134,7 +133,7 @@ def run_training(seed=None):
     plt.tight_layout()
     plt.savefig("precision.png", dpi=300)
     plt.close()
-    print("📊 Precision plot salvato in precision.png")
+    print(" Precision plot salvato in precision.png")
 
     # === Plot 3b: Recall ===
     plt.figure(figsize=(8,6))
@@ -147,7 +146,7 @@ def run_training(seed=None):
     plt.tight_layout()
     plt.savefig("recall.png", dpi=300)
     plt.close()
-    print("📊 Recall plot salvato in recall.png")
+    print(" Recall plot salvato in recall.png")
 
     # === Plot 3c: F1-Score ===
     plt.figure(figsize=(8,6))
@@ -160,7 +159,7 @@ def run_training(seed=None):
     plt.tight_layout()
     plt.savefig("f1_score.png", dpi=300)
     plt.close()
-    print("📊 F1-Score plot salvato in f1_score.png")
+    print(" F1-Score plot salvato in f1_score.png")
 
 
     # === Plot 4: Average Inference Time ===
@@ -174,4 +173,4 @@ def run_training(seed=None):
     plt.tight_layout()
     plt.savefig("inference_time.png", dpi=300)
     plt.close()
-    print("📊 Inference time plot salvato in inference_time.png")
+    print(" Inference time plot salvato in inference_time.png")

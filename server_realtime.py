@@ -1,7 +1,7 @@
 import socket
 import pyrealsense2 as rs
 import torch
-from landmarks import landmarks_dist
+from vale.landmarks import landmarks_dist
 from model import FaceClassifier
 from predict import predict_identity
 import numpy as np
@@ -42,13 +42,13 @@ def capture_and_process():
         print("Processing landmarks...")
         features = landmarks_dist(color_image, depth_image, "unknown", "neutral")    
         identity, confidence = predict_identity(features)
-        print(f"✅ Prediction: {identity} (confidence={confidence:.2f})")
+        print(f"Prediction: {identity} (confidence={confidence:.2f})")
         
         # Return both identity and confidence
         return {"identity": identity, "confidence": float(confidence)}
     
     except Exception as e:
-        print(f"❌ Error in capture_and_process: {str(e)}")
+        print(f"Error in capture_and_process: {str(e)}")
         return {"error": str(e)}
     finally:
         pipeline.stop()
