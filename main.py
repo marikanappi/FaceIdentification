@@ -4,10 +4,10 @@ import numpy as np
 from config import config
 
 if __name__ == "__main__":
-    seed = 42
+    '''seed = 42
     run_training(seed=seed)  
     run_test(seed=seed)
-    print("Avvio server TCP per ricevere immagini da Unity...")
+    print("Avvio server TCP per ricevere immagini da Unity...")'''
     config()
     from server import run_server  
     run_server()

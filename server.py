@@ -64,11 +64,11 @@ def handle_client(conn, addr):
 
                 png = Image.open(io.BytesIO(png_data))
                 # Flip verticale
-                png_flip = png.transpose(Image.FLIP_TOP_BOTTOM)
+                '''png_flip = png.transpose(Image.FLIP_TOP_BOTTOM)
                 
                 with io.BytesIO() as output_bytes:
                     png_flip.save(output_bytes, format='PNG')
-                    png_flip = output_bytes.getvalue()
+                    png_flip = output_bytes.getvalue()'''
                 
                 # Ricezione RAW
                 raw_len = struct.unpack('<I', recv_exact(conn, 4))[0]
@@ -78,7 +78,7 @@ def handle_client(conn, addr):
                 # Salvataggio temporaneo dei file
                 with NamedTemporaryFile(delete=False, suffix='.png') as png_file, \
                      NamedTemporaryFile(delete=False, suffix='.raw') as raw_file:
-                    png_file.write(png_flip)
+                    png_file.write(png_data)
                     raw_file.write(raw_data)
                     png_path = png_file.name
                     raw_path = raw_file.name
