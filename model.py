@@ -9,15 +9,16 @@ class FaceClassifier(nn.Module):
             nn.Linear(input_dim, 256),
             nn.ReLU(),
             nn.BatchNorm1d(256),
-            nn.Dropout(0.6),
+            nn.Dropout(0.5),
             
             nn.Linear(256, 128),
             nn.ReLU(),
             nn.BatchNorm1d(128),
-            nn.Dropout(0.5),
+            nn.Dropout(0.4),
             
             nn.Linear(128, 64),
             nn.ReLU(),
+            nn.Dropout(0.3),
             
             nn.Linear(64, num_classes)
         )

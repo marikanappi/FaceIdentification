@@ -19,7 +19,7 @@ def run_training(seed=None):
     batch_size = 64
     lr = 1e-3
     num_epochs = 150
-    patience = 20
+    patience = 30
     
     # Usa seed solo se specificato, altrimenti sarà None
     random.seed(seed)
@@ -74,7 +74,7 @@ def run_training(seed=None):
             f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc*100:.2f}% | Val F1: {val_f1:.3f} | "
             f"Val Inf Time: {val_inf_time*1000:.2f}ms")
 
-        if val_loss < best_val_loss - 1e-4:  # Un piccolo delta per evitare salvataggi dovuti a fluttuazioni minime
+        if val_loss < best_val_loss - 1e-4:  
             best_val_loss = val_loss
             best_model_state = model.state_dict()
             patience_counter = 0
@@ -87,6 +87,9 @@ def run_training(seed=None):
 
     if best_model_state is not None:
         model.load_state_dict(best_model_state)
+        # Save the best model to file
+        torch.save(best_model_state, "best_model.pth")
+        print("✓ Best model saved to best_model.pth")
 
     print(f"Best Validation Loss: {best_val_loss:.4f}")
     print(f"Average Inference Time: {np.mean(val_inference_times)*1000:.2f}ms")
