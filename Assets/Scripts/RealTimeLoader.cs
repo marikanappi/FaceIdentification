@@ -14,8 +14,6 @@ public class RealTimeLoader : MonoBehaviour
     public RawImage previewImage;
     public TextMeshProUGUI resultText;
 
-    public GameObject resultsPanel;
-
     // Runtime Data
     private Texture2D colorTexture;
     private ushort[] depthData;
@@ -38,11 +36,6 @@ public class RealTimeLoader : MonoBehaviour
         if (depthRenderer != null)
         {
             depthRenderer.Source.OnNewSample += OnNewDepthFrame;
-        }
-
-        if (resultsPanel != null)
-        {
-            resultsPanel.SetActive(false);
         }
     }
 
@@ -141,38 +134,11 @@ public class RealTimeLoader : MonoBehaviour
 
             networkSender.SendBytes(rgbBytes, depthBytes, (result) => {
                 resultText.text = result;
-                if (resultText != null)
-                {
-                    // Controlla se il risultato è "unknown"
-                    if (result.ToLower() == "unknown")
-                    {
-                        resultText.text = "Unmatched";
-                        resultText.color = Color.green;
-                    }
-                    else
-                    {
-                        resultText.text = "Match";
-                        resultText.color = Color.red;
-                    }
-
-                    if (resultsPanel != null)
-                        resultsPanel.SetActive(true);
-                }
-
-
-                if (resultsPanel != null)
-                {
-                    resultsPanel.SetActive(false);
-                }
             });
         }
         catch (Exception ex)
         {
             resultText.text = $"Capture Error: {ex.Message}";
-            if (resultsPanel != null)
-            {
-                resultsPanel.SetActive(false);
-            }
         }
     }
 }

@@ -15,19 +15,10 @@ public class ImageLoader : MonoBehaviour
     public TextMeshProUGUI rgbInfoText; // Optional: Show RGB info
     public TextMeshProUGUI depthInfoText; // Optional: Show depth info
 
-    public GameObject resultsPanel;
-
     private byte[] rgbBytes;
     private byte[] depthBytes;
     private Texture2D rgbTexture;
     private Texture2D depthTexture;
-
-
-    void Start()
-    {
-        if (resultsPanel != null)
-            resultsPanel.SetActive(false);  // Nascondi pannello all'inizio
-    }
 
     public void LoadRGB()
     {
@@ -88,17 +79,9 @@ public class ImageLoader : MonoBehaviour
         sender.SendBytes(rgbBytes, depthBytes, (identity) =>
         {
             Debug.Log("Risultato ricevuto: " + identity);
-            if (resultText != null)
-            {
-                resultText.text = "Identità: " + identity;
-            }
-            if (resultsPanel != null)
-            {
-                resultsPanel.SetActive(true); // Mostra pannello con risultato
-            }
-        });
-    }
-   
+            resultText.text = "Identità: " + identity;
+        });
+    }
 
     void OnDestroy()
     {
