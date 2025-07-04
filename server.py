@@ -58,17 +58,17 @@ def handle_client(conn, addr):
                 conn.settimeout(PROCESSING_TIMEOUT)
                 png_data = recv_exact(conn, png_len)
 
-                # FLIP PNG
+                # FLIP PNG   commenta per statica, lascia per realtime
                 from PIL import Image
                 import io
 
-                png = Image.open(io.BytesIO(png_data))
+                '''png = Image.open(io.BytesIO(png_data))
                 # Flip verticale
-                '''png_flip = png.transpose(Image.FLIP_TOP_BOTTOM)
+                png_flip = png.transpose(Image.FLIP_TOP_BOTTOM)
                 
                 with io.BytesIO() as output_bytes:
                     png_flip.save(output_bytes, format='PNG')
-                    png_flip = output_bytes.getvalue()'''
+                    png_data = output_bytes.getvalue()'''
                 
                 # Ricezione RAW
                 raw_len = struct.unpack('<I', recv_exact(conn, 4))[0]
@@ -86,7 +86,7 @@ def handle_client(conn, addr):
                 try:
                     print("Processing landmarks...")
                     features = landmarks_dist(png_path, raw_path, "unknown", "neutral")
-                    show_overlay(png_path, raw_path, 640, 480)
+                    '''show_overlay(png_path, raw_path, 640, 480)'''
                     predicted_label, confidence = predict_identity(features)
 
                     print(f"Prediction: {predicted_label} (confidence={confidence:.2f})")
