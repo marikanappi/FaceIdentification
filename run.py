@@ -13,35 +13,31 @@ from model import FaceClassifier
 from train import train
 from test import evaluate
 
-def run_training(seed=None):  
+def run_training(seed=None):
     # === Config ===
-    csv_path = 'dataset_features_final.csv'
-    batch_size = 64
+    csv_path = 'balanced_dataset.csv'
+    batch_size = 128
     lr = 1e-3
     num_epochs = 150
-    patience = 30
+    patience = 20
     
-    # Usa seed solo se specificato, altrimenti sarà None
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(seed)
-    torch.backends.cudnn.deterministic = (seed is not None)
-    torch.backends.cudnn.benchmark = (seed is None)  
+    # Usa seed solo per l'inizializzazione del modello se specificato
+    if seed is not None:
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # === Load data ===
-    train_dataset, val_dataset, test_dataset, label_encoder = load_data(csv_path, seed=seed) 
-
-
-    g = torch.Generator()
-    g.manual_seed(seed)
-
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, generator=g)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True, generator=g)
-
+    train_dataset, val_dataset, test_dataset, label_encoder = load_data(csv_path)
+    
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
 
     input_dim = train_dataset[0][0].shape[0]
     num_classes = len(label_encoder.classes_)

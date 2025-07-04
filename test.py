@@ -31,7 +31,7 @@ def predict_with_unknown(model, X, device, threshold=0.5, label_encoder=None):
 
     return results
 
-def evaluate(model, dataloader, criterion, device, threshold=0.5, return_predictions=False):
+def evaluate(model, dataloader, criterion, device, threshold=0.2, return_predictions=False):
     model.eval()
     total_loss = 0
     correct = 0
@@ -95,18 +95,18 @@ def evaluate(model, dataloader, criterion, device, threshold=0.5, return_predict
     else:
         return avg_loss, accuracy, precision, recall, f1, avg_inference_time
 
-def run_test(seed=None):  # Aggiungi seed come parametro opzionale
-    csv_path = 'dataset_features_final.csv'
-    batch_size = 32
+def run_test():
+    csv_path = 'balanced_dataset.csv'
+    batch_size = 64
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    # Load test data con eventuale seed
-    _, _, test_dataset, label_encoder = load_data(csv_path, seed=seed)
-    g = torch.Generator()
-    g.manual_seed(seed)
+    # Load test data senza seed
+    _, _, test_dataset, label_encoder = load_data(csv_path)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, generator=g)
+    input_dim = test_dataset[0][0].shape[0]
+    num_classes = len(label_encoder.classes_)
 
     input_dim = test_dataset[0][0].shape[0]
     num_classes = len(label_encoder.classes_)
