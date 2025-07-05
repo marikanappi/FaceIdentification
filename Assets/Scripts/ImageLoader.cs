@@ -70,6 +70,7 @@ public class ImageLoader : MonoBehaviour
 
     public void SendToPython()
     {
+        resultText.text = "Waiting for identification...";
         if (rgbBytes == null || depthBytes == null)
         {
             Debug.LogWarning("Carica sia RGB che RAW prima di inviare.");
