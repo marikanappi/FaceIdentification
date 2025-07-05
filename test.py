@@ -130,7 +130,7 @@ def run_test():
     print(f"Test Precision: {test_precision:.3f}")
     print(f"Test Recall: {test_recall:.3f}")
     print(f"Test F1-Score: {test_f1:.3f}")
-    print(f"Average Inference Time: {test_inf_time*1000:.2f}ms")
+    print(f"Average Inference Time: {test_inf_time*1000:.3f}ms")
     print("="*60)
 
     # Test predizioni con unknown su un batch
