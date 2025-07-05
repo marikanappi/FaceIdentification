@@ -12,10 +12,11 @@ from data_utils import load_data
 from model import FaceClassifier
 from train import train
 from test import evaluate
+import pickle
 
 def run_training(seed=None):
     # === Config ===
-    csv_path = 'balanced_dataset.csv'
+    csv_path = 'dataset_features_final.csv'
     batch_size = 128
     lr = 1e-3
     num_epochs = 150
@@ -86,6 +87,11 @@ def run_training(seed=None):
         # Save the best model to file
         torch.save(best_model_state, "best_model.pth")
         print("✓ Best model saved to best_model.pth")
+
+        # Salva anche il label_encoder
+        with open("label_encoder.pkl", "wb") as f:
+            pickle.dump(label_encoder, f)
+        print("✓ Label encoder salvato in label_encoder.pkl")
 
     print(f"Best Validation Loss: {best_val_loss:.4f}")
     print(f"Average Inference Time: {np.mean(val_inference_times)*1000:.2f}ms")

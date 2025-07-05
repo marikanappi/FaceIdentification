@@ -8,6 +8,6 @@ if __name__ == "__main__":
     run_training(seed=seed)  
     run_test()  # Senza seed
     print("Avvio server TCP per ricevere immagini da Unity...")
-    '''config()
+    config()
     from server import run_server  
-    run_server()'''
+    run_server()

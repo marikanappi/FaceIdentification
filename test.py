@@ -10,7 +10,7 @@ from model import FaceClassifier
 
 
 
-def predict_with_unknown(model, X, device, threshold=0.5, label_encoder=None):
+def predict_with_unknown(model, X, device, threshold=0.3, label_encoder=None):
     model.eval()
     X = X.to(device)
 
@@ -31,7 +31,7 @@ def predict_with_unknown(model, X, device, threshold=0.5, label_encoder=None):
 
     return results
 
-def evaluate(model, dataloader, criterion, device, threshold=0.2, return_predictions=False):
+def evaluate(model, dataloader, criterion, device, threshold=0.3, return_predictions=False):
     model.eval()
     total_loss = 0
     correct = 0
@@ -96,7 +96,7 @@ def evaluate(model, dataloader, criterion, device, threshold=0.2, return_predict
         return avg_loss, accuracy, precision, recall, f1, avg_inference_time
 
 def run_test():
-    csv_path = 'balanced_dataset.csv'
+    csv_path = 'dataset_features_final.csv'
     batch_size = 64
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -139,7 +139,7 @@ def run_test():
     y_batch = y_batch.cpu().numpy()
 
     # Predizioni con unknown
-    threshold = 0.6
+    threshold = 0.3
     preds_with_unknown = predict_with_unknown(model, X_batch, device, threshold=threshold, label_encoder=label_encoder)
 
     # Etichette vere (stringhe)

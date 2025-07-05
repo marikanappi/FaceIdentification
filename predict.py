@@ -13,7 +13,7 @@ model.eval()
 label_encoder = joblib.load("label_encoder.pkl")
 scaler = joblib.load("scaler.pkl")
 
-def predict_identity(features, threshold=0.5):
+def predict_identity(features, threshold=0.3):
     # Preprocessing
     features_scaled = scaler.transform([features])
     input_tensor = torch.tensor(features_scaled, dtype=torch.float32).to(device)
