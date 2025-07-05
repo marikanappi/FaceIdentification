@@ -128,6 +128,7 @@ public class RealTimeLoader : MonoBehaviour
 
         try
         {
+            resultText.text = "Waiting for identification...";
             byte[] rgbBytes = colorTexture.EncodeToPNG();
             byte[] depthBytes = new byte[depthData.Length * sizeof(ushort)];
             Buffer.BlockCopy(depthData, 0, depthBytes, 0, depthBytes.Length);

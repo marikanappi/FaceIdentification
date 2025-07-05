@@ -3,6 +3,11 @@ using UnityEngine.SceneManagement;
 
 public class MenuManager : MonoBehaviour
 {
+    public void LoadScene0()
+    {
+        SceneManager.LoadScene("Menù");
+    }
+
     public void LoadScene1()
     {
         SceneManager.LoadScene("Static");
