@@ -110,7 +110,6 @@ This will automatically:
    Before running the server, choose your operating mode by editing the image flip setting in `server.py`:
 
    ```python
-   # FLIP PNG - Comment/Uncomment based on your needs:
    ''' 
    png = Image.open(io.BytesIO(png_data))
    png_flip = png.transpose(Image.FLIP_TOP_BOTTOM)  # Vertical flip
