@@ -30,6 +30,39 @@ The system consists of three core components:
 | Neural Network     | PyTorch (MLP)                | ~95% test accuracy    |
 | Server             | Python Socket API            | <50ms inference       |
 
+## 🗂️ Database Structure
+
+The system uses a **CSV-formatted database** containing facial features extracted from 3D RGB-D images. Each row represents a unique facial sample identified by subject and expression, and includes all the features used by the classifier.
+
+### 📄 CSV Format
+
+```csv
+identity,expression,filename,dist_ensx_se,dist_ensx_prn,...,lbp_entropy
+```
+
+### ✅ Included Fields
+
+| Category              | Description                                                                           |
+| --------------------- | ------------------------------------------------------------------------------------- |
+| `identity`            | Subject identity                                                                            |
+| `expression`          | Facial expression (which is always **N** so neutral)                                               |
+| `filename`            | Filename                                                    |
+| **3D Distances**      | Euclidean distances between key landmarks (e.g., `dist_ensx_se`, `dist_prn_ls`, etc.) |
+| **3D Areas**          | Triangular surface areas from facial landmarks (e.g., `area_prn_alL_alR`)             |
+| **3D Volumes**        | Volumes of tetrahedrons formed by 3D landmarks (e.g., `volume_ensx_prn_alL_alR`)      |
+| **RGB Texture Stats** | Color statistics: `mean_R/G/B`, `std`, `skewness`, `entropy`                          |
+| **HSV Texture Stats** | Mean values for `H`, `S`, and `V` channels                                            |
+| **LBP Features**      | Local texture patterns: `lbp_mean`, `lbp_std`, `lbp_entropy`                          |
+
+### 🧾 Sample Row
+
+```csv
+bs000,N,bs000_N_N_0.lm3,0.7055,1.5689,0.9211,1.6894,...,0.9696
+```
+
+This row represents a sample for subject `bs000` with a neutral facial expression. It includes all **40 numeric features** that are fed into the neural network for identity recognition.
+
+
 ## 🛠️ Setup Guide
 
 ### 📋 Requirements
