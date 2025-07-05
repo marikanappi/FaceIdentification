@@ -20,7 +20,6 @@ The system consists of three core components:
    - Processes incoming RGB-D frames from clients  
    - Returns predicted identity with confidence score  
 
----
 
 ## ✨ Key Features
 
@@ -71,7 +70,7 @@ This row represents a sample for subject `bs000` with a neutral facial expressio
 pip install torch face-alignment scikit-learn opencv-python matplotlib
 ````
 
----
+
 
 ### ⚡ Quick Start
 
