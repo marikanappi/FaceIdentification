@@ -96,7 +96,7 @@ def evaluate(model, dataloader, criterion, device, threshold=0.3, return_predict
         return avg_loss, accuracy, precision, recall, f1, avg_inference_time
 
 def run_test():
-    csv_path = 'dataset_features_final.csv'
+    csv_path = 'balanced_dataset.csv'
     batch_size = 64
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

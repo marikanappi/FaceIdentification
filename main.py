@@ -7,7 +7,7 @@ if __name__ == "__main__":
     seed = 0 # Usato solo per l'addestramento
     run_training(seed=seed)  
     run_test()  # Senza seed
-    print("Avvio server TCP per ricevere immagini da Unity...")
+    '''print("Avvio server TCP per ricevere immagini da Unity...")
     config()
     from server import run_server  
-    run_server()
+    run_server()'''

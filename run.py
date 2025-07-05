@@ -16,7 +16,7 @@ import pickle
 
 def run_training(seed=None):
     # === Config ===
-    csv_path = 'dataset_features_final.csv'
+    csv_path = 'balanced_dataset.csv'
     batch_size = 128
     lr = 1e-3
     num_epochs = 150
