@@ -11,7 +11,6 @@ from predict import predict_identity
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# Caricamento modello e risorse
 model = FaceClassifier(input_dim=40, num_classes=111)  
 model.load_state_dict(torch.load("best_model.pth", map_location=device))
 model.to(device)
@@ -20,7 +19,6 @@ model.eval()
 label_encoder = joblib.load("label_encoder.pkl")
 scaler = joblib.load("scaler.pkl")
 
-# Configurazione server
 HOST = '0.0.0.0'
 PORT = 5005
 BUFFER_SIZE = 65536
@@ -45,8 +43,7 @@ def handle_client(conn, addr):
         while True:
             try:
                 conn.settimeout(IDLE_TIMEOUT)
-                
-                # Ricezione PNG
+
                 png_len_bytes = recv_exact(conn, 4)
                 if not png_len_bytes:
                     print(f"Client {addr} gracefully disconnected")
@@ -58,24 +55,13 @@ def handle_client(conn, addr):
                 conn.settimeout(PROCESSING_TIMEOUT)
                 png_data = recv_exact(conn, png_len)
 
-                # FLIP PNG   commenta per statica, lascia per realtime
                 from PIL import Image
                 import io
 
-                '''png = Image.open(io.BytesIO(png_data))
-                # Flip verticale
-                png_flip = png.transpose(Image.FLIP_TOP_BOTTOM)
-                
-                with io.BytesIO() as output_bytes:
-                    png_flip.save(output_bytes, format='PNG')
-                    png_data = output_bytes.getvalue()'''
-                
-                # Ricezione RAW
                 raw_len = struct.unpack('<I', recv_exact(conn, 4))[0]
                 print(f"Receiving RAW ({raw_len/1024:.1f} KB)...")
                 raw_data = recv_exact(conn, raw_len)
 
-                # Salvataggio temporaneo dei file
                 with NamedTemporaryFile(delete=False, suffix='.png') as png_file, \
                      NamedTemporaryFile(delete=False, suffix='.raw') as raw_file:
                     png_file.write(png_data)
@@ -93,7 +79,7 @@ def handle_client(conn, addr):
                     conn.sendall(predicted_label.encode('utf-8') + b'\x00')
 
                 finally:
-                    # Pulizia dei file temporanei
+
                     os.unlink(png_path)
                     os.unlink(raw_path)
 

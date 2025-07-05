@@ -34,33 +34,18 @@ def volume_tetra(a, b, c, d):
                                np.array(c) - np.array(d)))) / 6
 
 def show_overlay(rgb_path, depth_path, width, height, depth_dtype='uint16'):
-    """
-    Visualizza l'immagine RGB e la mappa di profondità sovrapposte.
-    
-    Args:
-        rgb_path (str): percorso dell'immagine PNG.
-        depth_path (str): percorso del file RAW della profondità.
-        width (int): larghezza dell'immagine/depth map.
-        height (int): altezza dell'immagine/depth map.
-        depth_dtype (str): tipo dei dati del file RAW ('uint16' o 'float32').
-    """
-    # Carica immagine RGB
+
     rgb = np.array(Image.open(rgb_path).convert("RGB"))
-    
-    # Carica RAW depth
+
     dtype = np.uint16 if depth_dtype == 'uint16' else np.float32
     depth = np.fromfile(depth_path, dtype=dtype).reshape((height, width))
     
-    # Normalizza la mappa di profondità per visualizzazione
     depth_normalized = (depth - np.min(depth)) / (np.max(depth) - np.min(depth) + 1e-8)
     
-    # Converti depth in colormap per sovrapposizione
-    depth_colormap = plt.cm.plasma(depth_normalized)[:, :, :3]  # elimina alpha
+    depth_colormap = plt.cm.plasma(depth_normalized)[:, :, :3]
 
-    # Fonde le immagini (50% RGB, 50% depth colormap)
     overlay = (0.5 * rgb / 255 + 0.5 * depth_colormap)
 
-    # Mostra
     plt.figure(figsize=(10, 5))
     plt.imshow(overlay)
     plt.title("Overlay RGB + Depth")
@@ -68,14 +53,12 @@ def show_overlay(rgb_path, depth_path, width, height, depth_dtype='uint16'):
     plt.show()
 
 def calculate_texture_features(image, landmarks_3d, normalize=True):
-    # Convert to HSV
+
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    
-    # Calculate face bounding box
+
     if not landmarks_3d:
         return None
-    
-    # Get face region
+
     x_coords = [v[0] for v in landmarks_3d.values()]
     y_coords = [v[1] for v in landmarks_3d.values()]
     min_x, max_x = max(0, min(x_coords)), min(image.shape[1], max(x_coords))
@@ -84,19 +67,16 @@ def calculate_texture_features(image, landmarks_3d, normalize=True):
     face_region = image[min_y:max_y, min_x:max_x]
     if face_region.size == 0:
         return None
-    
-    # RGB features
+
     r = face_region[:,:,0].flatten()
     g = face_region[:,:,1].flatten()
     b = face_region[:,:,2].flatten()
-    
-    # HSV features
+
     hsv_region = hsv[min_y:max_y, min_x:max_x]
     h = hsv_region[:,:,0].flatten()
     s = hsv_region[:,:,1].flatten()
     v = hsv_region[:,:,2].flatten()
-    
-    # LBP features
+
     gray = cv2.cvtColor(face_region, cv2.COLOR_BGR2GRAY)
     radius = 3
     n_points = 8 * radius
@@ -127,22 +107,18 @@ def calculate_texture_features(image, landmarks_3d, normalize=True):
     }
     
     if normalize:
-        # Normalizzazione min-max per le feature di colore (0-255)
+
         color_features = ['mean_R', 'mean_G', 'mean_B', 'std_R', 'std_G', 'std_B']
         for f in color_features:
             features[f] = features[f] / 255.0
-        
-        # Normalizzazione min-max per HSV (H: 0-179, S: 0-255, V: 0-255)
+
         features['mean_H'] = features['mean_H'] / 179.0
         features['mean_S'] = features['mean_S'] / 255.0
         features['mean_V'] = features['mean_V'] / 255.0
-        
-        # Normalizzazione LBP (valori dipendono dai parametri)
+
         max_lbp = n_points + 2
         features['lbp_mean'] = features['lbp_mean'] / max_lbp
         features['lbp_std'] = features['lbp_std'] / max_lbp
-        
-        # Le altre feature (skew, entropy) sono già in scale ragionevoli
     
     return features
 
@@ -195,7 +171,6 @@ def landmarks_dist(png, raw, identity, expression, depth_shape=(480, 640), visua
             z_depth = int(depth_map[y, x])
         landmarks_3d[name] = (x, y, z_depth)
 
-    # Correzione z se nullo
     for name, (x, y, z) in landmarks_3d.items():
         if z == 0 and name in opposite_landmarks:
             opp = opposite_landmarks[name]
@@ -222,17 +197,17 @@ def landmarks_dist(png, raw, identity, expression, depth_shape=(480, 640), visua
 
     # === Distanze ===
     distance_pairs = [
-        ("ensx", "se"),        # dist_ensx_se
-        ("ensx", "prn"),       # dist_ensx_prn
-        ("se", "prn"),         # dist_se_prn
-        ("se", "ls"),          # dist_se_ls
-        ("prn", "ls"),         # dist_prn_ls
-        ("alsx", "alsdx"),     # dist_alL_alR
-        ("cheilion_sx", "cheilion_dx"),  # dist_cheilion_sx_cheilion_dx
-        ("ensx", "exsx"),      # dist_ensx_exsx
-        ("ensdx", "exdx"),     # dist_ensdx_exdx
-        ("exsx", "exdx"),      # dist_exsx_exdx
-        ("ensx", "ensdx"),     # dist_ensx_ensdx
+        ("ensx", "se"),        
+        ("ensx", "prn"),      
+        ("se", "prn"),      
+        ("se", "ls"),     
+        ("prn", "ls"),      
+        ("alsx", "alsdx"),   
+        ("cheilion_sx", "cheilion_dx"), 
+        ("ensx", "exsx"),  
+        ("ensdx", "exdx"),   
+        ("exsx", "exdx"),   
+        ("ensx", "ensdx"),   
     ]
 
     distances = []
@@ -245,12 +220,12 @@ def landmarks_dist(png, raw, identity, expression, depth_shape=(480, 640), visua
 
     # === Aree ===
     area_triplets = [
-        ("ensx", "exsx", "exdx"),       # area_ensx_exsx_exdx
-        ("prn", "alsx", "alsdx"),       # area_prn_alL_alR
-        ("cheilion_sx", "cheilion_dx", "ls"),  # area_cheilion_sx_cheilion_dx_ls
-        ("ensx", "ensdx", "prn"),       # area_ensx_ensdx_prn
-        ("se", "prn", "alsx"),          # area_se_prn_alL
-        ("se", "prn", "alsdx"),         # area_se_prn_alR
+        ("ensx", "exsx", "exdx"),   
+        ("prn", "alsx", "alsdx"),    
+        ("cheilion_sx", "cheilion_dx", "ls"),  
+        ("ensx", "ensdx", "prn"), 
+        ("se", "prn", "alsx"),  
+        ("se", "prn", "alsdx"),     
     ]
 
     areas = []
@@ -263,10 +238,10 @@ def landmarks_dist(png, raw, identity, expression, depth_shape=(480, 640), visua
 
     # === Volumi ===
     volume_quads = [
-        ("ensx", "prn", "alsx", "alsdx"),      # volume_ensx_prn_alL_alR
-        ("ensx", "exsx", "exdx", "prn"),       # volume_ensx_exsx_exdx_prn
-        ("ensx", "ensdx", "se", "prn"),        # volume_ensx_ensdx_se_prn
-        ("exsx", "exdx", "alsx", "alsdx")      # volume_exsx_exdx_alL_alR
+        ("ensx", "prn", "alsx", "alsdx"),   
+        ("ensx", "exsx", "exdx", "prn"),    
+        ("ensx", "ensdx", "se", "prn"),      
+        ("exsx", "exdx", "alsx", "alsdx")  
     ]
 
     volumes = []
@@ -278,8 +253,7 @@ def landmarks_dist(png, raw, identity, expression, depth_shape=(480, 640), visua
             volumes.append(0)
 
     facial_area = float(sum(v for v in areas if v is not None)) if any(areas) else 0
-    
-    # Calculate texture features
+
     texture_features = calculate_texture_features(image, landmarks_3d)
     if texture_features is None:
         texture_features = {
@@ -291,7 +265,6 @@ def landmarks_dist(png, raw, identity, expression, depth_shape=(480, 640), visua
             'lbp_mean': 0, 'lbp_std': 0, 'lbp_entropy': 0
         }
 
-    # Create feature vector in the exact order requested
     feature_vector = [
         *distances,  # 11 distance features
         *areas,      # 6 area features
@@ -320,17 +293,9 @@ def landmarks_dist(png, raw, identity, expression, depth_shape=(480, 640), visua
     return feature_vector
 
 def process_folder_to_csv(folder_path, output_csv):
-    """
-    Elabora tutte le coppie di immagini RGB-D in una cartella e aggiunge i risultati a un CSV
-    
-    Args:
-        folder_path (str): percorso della cartella contenente le immagini
-        output_csv (str): percorso del file CSV di output (esistente o nuovo)
-    """
-    # Crea o prepara il file CSV
+
     file_exists = os.path.exists(output_csv)
-    
-    # Intestazioni delle colonne (deve corrispondere all'ordine della feature vector)
+
     headers = [
         # Distances (11)
         'dist_ensx_se', 'dist_ensx_prn', 'dist_se_prn', 'dist_se_ls', 'dist_prn_ls',
@@ -359,43 +324,37 @@ def process_folder_to_csv(folder_path, output_csv):
         # Metadati
         'identity', 'expression', 'filename'
     ]
-    
-    # Trova tutte le coppie RGB-D nella cartella
+
     rgb_files = [f for f in os.listdir(folder_path) if f.endswith('_Color.png')]
     
     with open(output_csv, mode='a', newline='') as csv_file:
         writer = csv.writer(csv_file)
-        
-        # Scrivi l'intestazione solo se il file è nuovo
+
         if not file_exists:
             writer.writerow(headers)
         
         for rgb_file in rgb_files:
-            # Estrai identità ed espressione dal nome del file
+
             base_name = rgb_file.replace('_Color.png', '')
             parts = base_name.split('_')
             identity = parts[0] if len(parts) > 0 else 'unknown'
             expression = parts[1] if len(parts) > 1 else 'neutral'
-            
-            # Percorsi dei file
+
             rgb_path = os.path.join(folder_path, rgb_file)
             raw_path = os.path.join(folder_path, f"{base_name}_Depth.raw")
             
             if not os.path.exists(raw_path):
                 print(f"File di profondità mancante per {rgb_file}, saltando...")
                 continue
-            
-            # Calcola le feature
+
             try:
                 features = landmarks_dist(rgb_path, raw_path, identity, expression)
                 if features is None:
                     print(f"Nessun volto rilevato in {rgb_file}, saltando...")
                     continue
-                
-                # Aggiungi metadati alla feature vector
+
                 full_features =  [identity, expression, rgb_file] + features
-                
-                # Scrivi la riga nel CSV
+
                 writer.writerow(full_features)
                 print(f"Processato con successo: {rgb_file}")
                 

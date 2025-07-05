@@ -21,8 +21,7 @@ def run_training(seed=None):
     lr = 1e-3
     num_epochs = 150
     patience = 20
-    
-    # Usa seed solo per l'inizializzazione del modello se specificato
+
     if seed is not None:
         random.seed(seed)
         np.random.seed(seed)
@@ -84,11 +83,10 @@ def run_training(seed=None):
 
     if best_model_state is not None:
         model.load_state_dict(best_model_state)
-        # Save the best model to file
+
         torch.save(best_model_state, "best_model.pth")
         print("✓ Best model saved to best_model.pth")
 
-        # Salva anche il label_encoder
         with open("label_encoder.pkl", "wb") as f:
             pickle.dump(label_encoder, f)
         print("✓ Label encoder salvato in label_encoder.pkl")
@@ -96,7 +94,6 @@ def run_training(seed=None):
     print(f"Best Validation Loss: {best_val_loss:.4f}")
     print(f"Average Inference Time: {np.mean(val_inference_times)*1000:.3f}ms")
 
-    # === Final evaluation with confusion matrix ===
     final_val_loss, final_val_acc, final_val_precision, final_val_recall, final_val_f1, final_inf_time, y_true, y_pred = evaluate(model, val_loader, criterion, device, return_predictions=True)
     class_names = label_encoder.classes_
     
