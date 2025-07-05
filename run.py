@@ -88,7 +88,7 @@ def run_training(seed=None):
         print("✓ Best model saved to best_model.pth")
 
     print(f"Best Validation Loss: {best_val_loss:.4f}")
-    print(f"Average Inference Time: {np.mean(val_inference_times)*1000:.2f}ms")
+    print(f"Average Inference Time: {np.mean(val_inference_times)*1000:.3f}ms")
 
     # === Final evaluation with confusion matrix ===
     final_val_loss, final_val_acc, final_val_precision, final_val_recall, final_val_f1, final_inf_time, y_true, y_pred = evaluate(model, val_loader, criterion, device, return_predictions=True)

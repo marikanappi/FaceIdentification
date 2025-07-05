@@ -10,7 +10,7 @@ from model import FaceClassifier
 
 
 
-def predict_with_unknown(model, X, device, threshold=0.5, label_encoder=None):
+def predict_with_unknown(model, X, device, threshold=0.3, label_encoder=None):
     model.eval()
     X = X.to(device)
 
@@ -31,7 +31,7 @@ def predict_with_unknown(model, X, device, threshold=0.5, label_encoder=None):
 
     return results
 
-def evaluate(model, dataloader, criterion, device, threshold=0.2, return_predictions=False):
+def evaluate(model, dataloader, criterion, device, threshold=0.3, return_predictions=False):
     model.eval()
     total_loss = 0
     correct = 0
@@ -130,7 +130,7 @@ def run_test():
     print(f"Test Precision: {test_precision:.3f}")
     print(f"Test Recall: {test_recall:.3f}")
     print(f"Test F1-Score: {test_f1:.3f}")
-    print(f"Average Inference Time: {test_inf_time*1000:.2f}ms")
+    print(f"Average Inference Time: {test_inf_time*1000:.3f}ms")
     print("="*60)
 
     # Test predizioni con unknown su un batch
@@ -139,7 +139,7 @@ def run_test():
     y_batch = y_batch.cpu().numpy()
 
     # Predizioni con unknown
-    threshold = 0.6
+    threshold = 0.3
     preds_with_unknown = predict_with_unknown(model, X_batch, device, threshold=threshold, label_encoder=label_encoder)
 
     # Etichette vere (stringhe)
